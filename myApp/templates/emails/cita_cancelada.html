@@ -1,0 +1,8 @@
+<p>Hola {{ nombre_receptor }},</p>
+<p>La siguiente cita fue <strong>cancelada</strong>:</p>
+<ul>
+  <li>Docente: {{ docente }}</li>
+  <li>Representante: {{ representante }}</li>
+  <li>Fecha y hora: {{ inicio|date:"Y-m-d H:i" }}</li>
+</ul>
+{% if motivo_cancelacion %}<p>Motivo: {{ motivo_cancelacion }}</p>{% endif %}

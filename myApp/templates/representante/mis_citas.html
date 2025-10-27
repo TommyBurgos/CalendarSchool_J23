@@ -1,0 +1,31 @@
+{% extends 'representante/base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h4>Mis citas</h4>
+  <div class="list-group">
+    {% for c in citas %}
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ c.inicio|date:'Y-m-d H:i' }}</strong>
+          — {{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}
+          <div class="text-muted small">{{ c.curso_estudiante }} · {{ c.get_estado_display }}</div>
+        </div>
+        <div class="text-end">
+          {% if c.estado != "CANCELADA" %}
+            {% with limite=c.inicio|timesince %}
+            {# Calcula si faltan >= 24h #}
+            {% if c.inicio|date:"U" > now|date:"U"|add:"86400" %}
+              <a href="{% url 'rep_cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger">Cancelar</a>
+            {% else %}
+              <button class="btn btn-sm btn-outline-secondary" disabled title="Debe cancelar con 24h de antelación">Cancelar</button>
+            {% endif %}
+            {% endwith %}
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="list-group-item">Aún no tienes citas.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

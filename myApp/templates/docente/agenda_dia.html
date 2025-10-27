@@ -1,0 +1,56 @@
+{% extends 'docente/base.html' %}
+{% block content %}
+<div class="container py-4">
+<h4>Agenda del {{ fecha }}</h4>
+<form class="mb-3" method="get">
+<input type="date" class="form-control" name="fecha" value="{{ fecha|date:'Y-m-d' }}" onchange="this.form.submit()" />
+</form>
+<div class="row g-4">
+<div class="col-md-6">
+<div class="card">
+<div class="card-header">Slots libres</div>
+<ul class="list-group list-group-flush">
+{% for ini, fin in slots %}
+<li class="list-group-item">{{ ini|date:'H:i' }} - {{ fin|date:'H:i' }}</li>
+{% empty %}
+<li class="list-group-item">Sin disponibilidad.</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header">Citas</div>
+        <ul class="list-group list-group-flush">
+            {% for c in citas %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ c.inicio|date:'H:i' }}</strong> – {{ c.nombre_estudiante }}
+                    <small class="text-muted d-block">{{ c.curso_estudiante }}</small>
+                </div>
+                <div class="text-end">
+                    {% if c.estado == "PENDIENTE" %}
+                    <form method="post" action="{% url 'turnos:cita_confirmar' c.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-success">Confirmar</button>
+                    </form>
+                    <a href="{% url 'turnos:cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger">Cancelar</a>
+                    {% elif c.estado == "CONFIRMADA" %}
+                    <span class="badge bg-success">{{ c.get_estado_display }}</span>
+                    <a href="{% url 'turnos:cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger ms-2">Cancelar</a>
+                    {% elif c.estado == "CANCELADA" %}
+                    <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
+                    {% endif %}
+                </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="list-group-item">Sin citas.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}

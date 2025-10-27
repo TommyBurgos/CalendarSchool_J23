@@ -1,0 +1,98 @@
+{% load static %}
+
+<!doctype html>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Panel Representante · CalendarSchool{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+      body{background:#f8fafc}
+      .nav-link.active{font-weight:600}
+      .content-wrap{min-height:calc(100vh - 72px - 60px)}
+      footer{color:#6c757d}
+    </style>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'rep_buscar' %}">
+          <img src="{% static 'logo.png' %}" alt="" width="28" height="28" onerror="this.style.display='none'">
+          <strong>CalendarSchool</strong> <span class="opacity-75">Representante</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'rep_buscar' %}active{% endif %}" href="{% url 'rep_buscar' %}">Buscar disponibilidad</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'rep_buscar_semana' %}active{% endif %}"
+                    href="{% url 'rep_buscar_semana' %}">Buscar por semana</a>
+                </li>
+
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'rep_mis_citas' %}active{% endif %}" href="{% url 'rep_mis_citas' %}">Mis citas</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="avatar bg-light text-dark rounded-circle d-inline-flex justify-content-center align-items-center" style="width:28px;height:28px;">
+                  {{ request.user.first_name|default:request.user.username|first|upper }}
+                </span>
+                <span class="d-none d-lg-inline">{{ request.user.get_full_name|default:request.user.username }}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <!-- Ajusta el name si tu URL de perfil es otra -->
+                <li><a class="dropdown-item" href="{% url 'mi_perfil' %}">Mi perfil</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <form action="{% url 'logout' %}" method="post" class="px-3 py-1">{% csrf_token %}
+                    <button class="btn btn-link p-0 text-danger">Cerrar sesión</button>
+                  </form>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+
+{% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<main class="content-wrap">
+    <div class="container py-4">
+        {% block content %}{% endblock %}
+    </div>
+  
+</main>
+
+<footer class="py-3 border-top bg-white">
+  <div class="container d-flex justify-content-between small">
+    <span>© {{ now|date:"Y" }} CalendarSchool</span>
+    <span class="text-muted">Zona horaria: America/Guayaquil</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+{% block extra_js %}{% endblock %}
+```
+
+  </body>
+</html>

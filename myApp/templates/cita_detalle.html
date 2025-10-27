@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Cita{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Detalle de la cita</h1>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4"><strong>Fecha/Hora:</strong><br>{{ c.inicio|date:"Y-m-d H:i" }} — {{ c.fin|date:"H:i" }}</div>
+      <div class="col-md-4"><strong>Estado:</strong><br>
+        <span class="badge {% if c.estado == 'CONFIRMADA' %}bg-success{% elif c.estado == 'PENDIENTE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ c.estado }}</span>
+      </div>
+      <div class="col-md-4"><strong>Creada:</strong><br>{{ c.creada_en|date:"Y-m-d H:i" }}</div>
+
+      <div class="col-md-6"><strong>Docente:</strong><br>{{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}</div>
+      <div class="col-md-6"><strong>Representante:</strong><br>{{ c.representante.email }}</div>
+
+      <div class="col-md-6"><strong>Estudiante:</strong><br>{{ c.nombre_estudiante }}{% if c.curso_estudiante %} — {{ c.curso_estudiante }}{% endif %}</div>
+      <div class="col-md-6"><strong>Motivo:</strong><br>{{ c.motivo|default:"—" }}</div>
+
+      {% if c.estado == 'CANCELADA' and c.motivo_cancelacion %}
+      <div class="col-12"><strong>Cancelada por:</strong> {{ c.cancelada_por.email }} · <strong>Motivo:</strong> {{ c.motivo_cancelacion }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mt-4 d-flex">
+      {% if c.estado == 'PENDIENTE' %}
+      <form method="post" action="{% url 'confirmar_cita_admin' c.pk %}" class="me-2">{% csrf_token %}
+        <button class="btn btn-success">Confirmar</button>
+      </form>
+      {% endif %}
+      {% if c.estado != 'CANCELADA' %}
+      <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="me-2">{% csrf_token %}
+        <input type="hidden" name="motivo" value="Cancelada por administrador">
+        <button class="btn btn-outline-danger">Cancelar</button>
+      </form>
+      {% endif %}
+      <a class="btn btn-secondary ms-auto" href="{% url 'dashboard_admin' %}">Volver</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

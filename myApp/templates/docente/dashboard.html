@@ -1,0 +1,27 @@
+{% extends 'docente/base.html' %}
+{% block content %}
+<div class="container py-4">
+<h3 class="mb-3">Mi Panel (Docente)</h3>
+<div class="mb-3 d-flex gap-2 flex-wrap">
+<a class="btn btn-primary" href="{% url 'disp_list' %}">Disponibilidad</a>
+<a class="btn btn-outline-primary" href="{% url 'exc_list' %}">Excepciones</a>
+<a class="btn btn-outline-secondary" href="{% url 'agenda_dia' %}">Agenda día</a>
+<a class="btn btn-outline-secondary" href="{% url 'agenda_semana' %}">Agenda semana</a>
+</div>
+
+
+<h5 class="mt-4">Citas de hoy</h5>
+<ul class="list-group">
+{% for c in citas_hoy %}
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<span>
+<strong>{{ c.inicio|date:'H:i' }}</strong> – {{ c.nombre_estudiante }}<br>
+<small class="text-muted">{{ c.curso_estudiante }} · {{ c.get_estado_display }}</small>
+</span>
+</li>
+{% empty %}
+<li class="list-group-item">Sin citas hoy.</li>
+{% endfor %}
+</ul>
+</div>
+{% endblock %}

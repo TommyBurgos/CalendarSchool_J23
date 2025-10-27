@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Cargar Docentes{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">Carga de Docentes (CSV)</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" class="d-flex align-items-end gap-2">
+      {% csrf_token %}
+      <div class="flex-grow-1">
+        {{ form.archivo.label_tag }}
+        {{ form.archivo }}
+      </div>
+      <button class="btn btn-success">Cargar</button>
+      <a href="{% url 'formato_docentes' %}" class="btn btn-outline-secondary">Descargar formato</a>
+      <a href="{% url 'listar_docentes' %}" class="btn btn-link">Ver docentes</a>
+    </form>
+  </div>
+</div>
+
+<div class="alert alert-info mt-4">
+  <strong>Formato:</strong><br>
+  <code>cedula,email,nombres,apellidos,telefono,departamento,minutos_por_bloque,maximo_citas_diarias,activo,disponibilidad,reemplazar_disponibilidad</code>
+  <br>Disponibilidad (opcional): abreviaturas <code>LUN|MAR|MIE|JUE|VIE|SAB|DOM</code> y rangos <code>HH:MM-HH:MM</code> separados por <code>|</code>.<br>
+  Ej: <code>LUN 08:00-10:00|LUN 14:00-16:00|MIE 09:00-11:00</code>
+</div>
+{% endblock %}

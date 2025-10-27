@@ -1,0 +1,59 @@
+{% extends 'representante/base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h4>Buscar disponibilidad por semana</h4>
+  <form method="post" class="row g-3 mb-3">{% csrf_token %}
+    <div class="col-md-6">{{ form.docente.label_tag }} {{ form.docente }}</div>
+    <div class="col-md-3">{{ form.fecha.label_tag }} {{ form.fecha }}</div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Buscar</button>
+    </div>
+  </form>
+
+  {% if docente and di and df %}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong>Semana: {{ di }} — {{ df }}</strong>
+      <div class="btn-group">
+        <form method="post" class="d-inline">{% csrf_token %}
+            <input type="hidden" name="docente" value="{{ docente.pk }}">
+            <input type="hidden" name="fecha" value="{{ today|date:'Y-m-d' }}">
+            <button class="btn btn-outline-secondary btn-sm" title="Ir a la semana del día actual">
+            ↩ Semana actual
+            </button>
+        </form>
+        </div>
+
+
+    </div>
+
+    <div class="row">
+      {% for dia, slots in semana %}
+        <div class="col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header">{{ dia }} ({{ dia|date:'l' }})</div>
+            <ul class="list-group list-group-flush">
+              {% for ini, fin in slots %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span><strong>{{ ini|date:'H:i' }}</strong> - {{ fin|date:'H:i' }}</span>
+                  <form method="post" action="{% url 'rep_reservar' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="docente_id" value="{{ docente.id }}">
+                    <input type="hidden" name="inicio_iso" value="{{ ini|date:'Y-m-d\\TH:i:s' }}">
+                    <!-- Si prefieres pedir datos al reservar, elimina estos hidden -->
+                    <input type="hidden" name="curso_estudiante" value="{{ request.GET.curso_estudiante }}">
+                    <input type="hidden" name="nombre_estudiante" value="{{ request.GET.nombre_estudiante }}">
+                    <input type="hidden" name="motivo" value="{{ request.GET.motivo }}">
+                    <button class="btn btn-sm btn-success">Reservar</button>
+                  </form>
+                </li>
+              {% empty %}
+                <li class="list-group-item">Sin disponibilidad.</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

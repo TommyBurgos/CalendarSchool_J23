@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Cargar Estudiantes{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">Carga de Estudiantes (CSV)</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.archivo.label_tag }}
+        {{ form.archivo }}
+      </div>
+      <button class="btn btn-success">Cargar</button>
+      <a href="{% url 'formato_estudiantes' %}" class="btn btn-outline-secondary ms-2">Descargar formato CSV</a>
+      <a href="{% url 'dashboard_admin' %}" class="btn btn-secondary">Volver</a>
+    </form>
+  </div>
+</div>
+
+<div class="alert alert-info mt-4">
+  <strong>Formato esperado:</strong><br>
+  <code>cedula,nombre,curso,representante_cedula,representante_email,parentesco,verificado</code>
+</div>
+{% endblock %}

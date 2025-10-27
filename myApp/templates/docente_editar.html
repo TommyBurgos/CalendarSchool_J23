@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Perfil Docente{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Perfil de Docente — {{ usuario.get_full_name|default:usuario.email }}</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Minutos por bloque</label>
+          {{ form.minutos_por_bloque }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Máximo citas diarias</label>
+          {{ form.maximo_citas_diarias }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Departamento</label>
+          {{ form.departamento }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Teléfono</label>
+          {{ form.telefono }}
+        </div>
+        <div class="col-12 form-check mt-2">
+          {{ form.activo }} <label class="form-check-label">Activo</label>
+        </div>
+      </div>
+      <div class="mt-3 d-flex">
+        <button class="btn btn-success">Guardar</button>
+        <a href="{% url 'gestionar_disponibilidad_docente' perfil.id %}" class="btn btn-outline-secondary ms-2">Gestionar disponibilidad</a>
+        <a href="{% url 'listar_docentes' %}" class="btn btn-link ms-auto">Volver</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+<p>Hola {{ nombre_receptor }},</p>
+<p>Se registró una nueva cita:</p>
+<ul>
+  <li>Docente: {{ docente }}</li>
+  <li>Representante: {{ representante }}</li>
+  <li>Fecha y hora: {{ inicio|date:"Y-m-d H:i" }}</li>
+  <li>Motivo: {{ motivo }}</li>
+</ul>
+<p>Estado: <strong>{{ estado }}</strong></p>

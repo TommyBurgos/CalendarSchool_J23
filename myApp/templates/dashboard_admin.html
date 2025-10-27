@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Admin - CalendarSchool{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <!-- COLUMNA IZQUIERDA: FILTROS + RESULTADOS -->
+  <div class="col-12 col-lg-8">
+
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h1 class="h4 mb-0">Panel del Administrador</h1>
+      <span class="text-muted">{{ hoy }}</span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <strong>Filtros</strong>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+          <div class="col-12 col-md-4">
+            <label class="form-label">Fecha</label>
+            {{ form.fecha }}
+          </div>
+          <div class="col-12 col-md-5">
+            <label class="form-label">Docente</label>
+            {{ form.docente }}
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Estado</label>
+            {{ form.estado }}
+          </div>
+          <div class="col-12 col-md-3">
+            <button class="btn btn-success w-100">Filtrar</button>
+          </div>
+        </form>
+        <div class="mt-2">
+            <a class="btn btn-outline-secondary btn-sm"
+            href="{% url 'exportar_citas_csv' %}?fecha={{ form.fecha.value }}&docente={{ form.docente.value }}&estado={{ form.estado.value }}">
+            Exportar CSV (filtros actuales)
+            </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados filtrados -->
+    <div class="card shadow-sm mt-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><strong>Resultados de búsqueda</strong></span>
+        <small class="text-muted">Acciones rápidas por cita</small>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="min-width:140px;">Fecha/Hora</th>
+                <th>Docente</th>
+                <th>Estudiante</th>
+                <th>Representante</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in citas %}
+              <tr>
+                <td>{{ c.inicio|date:"Y-m-d H:i" }}</td>
+                <td>{{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}</td>
+                <td>{{ c.nombre_estudiante }}</td>
+                <td>{{ c.representante.email }}</td>
+                <td>
+                  <span class="badge {% if c.estado == 'CONFIRMADA' %}bg-success{% elif c.estado == 'PENDIENTE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                    {{ c.estado }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  {% if c.estado == 'PENDIENTE' %}
+                  <form method="post" action="{% url 'confirmar_cita_admin' c.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-success">Confirmar</button>
+                  </form>
+                  {% endif %}
+                  {% if c.estado != 'CANCELADA' %}
+                  <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="d-inline ms-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="motivo" value="Cancelada por administrador">
+                    <button class="btn btn-sm btn-outline-danger">Cancelar</button>
+                  </form>
+                  {% endif %}
+                  <a href="{% url 'cita_detalle_admin' c.pk %}" class="btn btn-sm btn-outline-secondary">Ver</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-4">Sin resultados.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COLUMNA DERECHA: MÉTRICAS + PRÓXIMAS CITAS -->
+  <div class="col-12 col-lg-4">
+    <div class="position-sticky" style="top: 1rem;">
+      <!-- Métricas -->
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="fw-bold">Citas hoy</div>
+              <div class="display-6">{{ total_hoy }}</div>
+              <small class="text-muted">Pend: {{ pend_hoy }} · Conf: {{ conf_hoy }} · Canc: {{ canc_hoy }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="fw-bold">Bloqueos hoy</div>
+              <div class="display-6">{{ bloqueos_hoy }}</div>
+              <small class="text-muted">Excepciones de disponibilidad</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="fw-bold">Docentes activos</div>
+              <div class="display-6">{{ docentes_activos }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="fw-bold">Representantes</div>
+              <div class="display-6">{{ reps }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximas citas -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><strong>Próximas citas</strong></span>
+          <a class="btn btn-sm btn-outline-success" href="{% url 'agenda_global_admin' %}">Agenda global</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha/Hora</th>
+                  <th>Docente</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in proximas %}
+                <tr>
+                  <td>{{ c.inicio|date:"Y-m-d H:i" }}</td>
+                  <td class="text-truncate" style="max-width: 140px;">
+                    {{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}
+                  </td>
+                  <td>
+                    <span class="badge {% if c.estado == 'CONFIRMADA' %}bg-success{% elif c.estado == 'PENDIENTE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                      {{ c.estado }}
+                    </span>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">Sin próximas citas.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'representante/base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h4>Buscar disponibilidad</h4>
+
+  <!-- 1) BUSCADOR EN GET para evitar choques con el form de reserva -->
+  <form method="get" class="row g-3 mb-3">
+    <div class="col-md-6">
+      {{ form.docente.label_tag }} {{ form.docente }}
+    </div>
+    <div class="col-md-3">
+      {{ form.fecha.label_tag }} {{ form.fecha }}
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Buscar</button>
+    </div>
+  </form>
+
+  {% if form.errors %}
+    <div class="alert alert-danger">{{ form.errors }}</div>
+  {% endif %}
+
+  {% if docente and fecha %}
+    <div class="card">
+      <div class="card-header">{{ docente }} — {{ fecha }}</div>
+      <ul class="list-group list-group-flush">
+        {% for ini, fin in slots %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><strong>{{ ini|date:'H:i' }}</strong> - {{ fin|date:'H:i' }}</span>
+            <!-- botón que SOLO setea el inicio en el form de abajo -->
+            <button
+              type="button"
+              class="btn btn-sm btn-success reservar-btn"
+              data-inicio="{{ ini|date:'Y-m-d\\TH:i:s' }}">
+              Reservar
+            </button>
+          </li>
+        {% empty %}
+          <li class="list-group-item">Sin disponibilidad.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- 2) ÚNICO FORM POST PARA RESERVAR -->
+    <div class="mt-3">
+      <h6>Datos de la cita</h6>
+      <form method="post" action="{% url 'rep_reservar' %}" class="row g-2" id="form-reserva">
+        {% csrf_token %}
+        <input type="hidden" name="docente_id" value="{{ docente.id }}">
+        <input type="hidden" name="inicio_iso" id="inicio_iso_field">
+
+        <div class="col-md-3">
+          <input name="curso_estudiante" id="curso_estudiante" class="form-control" placeholder="Curso (p.ej. 8vo A)" required>
+        </div>
+        <div class="col-md-3">
+          <input name="nombre_estudiante" id="nombre_estudiante" class="form-control" placeholder="Nombre estudiante" required>
+        </div>
+        <div class="col-md-6">
+          <input name="motivo" id="motivo" class="form-control" placeholder="Motivo" required>
+        </div>
+
+        {% if form_reserva_errors %}
+          <div class="col-12">
+            <div class="alert alert-danger mt-2">
+              {{ form_reserva_errors }}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="col-12 d-flex align-items-center gap-3">
+          <button class="btn btn-primary" id="btn-confirmar">Confirmar reserva</button>
+          <span class="text-muted small" id="slot-seleccionado"></span>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+
+<!-- 3) JS: setea inicio_iso y valida antes de enviar -->
+<script>
+  // setear inicio_iso al elegir un slot
+  document.querySelectorAll(".reservar-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const iso = btn.dataset.inicio;
+      const input = document.getElementById("inicio_iso_field");
+      if (input) {
+        input.value = iso;
+        const label = document.getElementById("slot-seleccionado");
+        if (label) label.textContent = "Slot seleccionado: " + iso.replace('T',' ');
+        document.getElementById("form-reserva").scrollIntoView({behavior:"smooth", block:"center"});
+      }
+    });
+  });
+
+  // validación simple en el cliente (además del server)
+  const form = document.getElementById("form-reserva");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      const iso = document.getElementById("inicio_iso_field").value.trim();
+      const curso = document.getElementById("curso_estudiante").value.trim();
+      const nombre = document.getElementById("nombre_estudiante").value.trim();
+      const motivo = document.getElementById("motivo").value.trim();
+      if (!iso || !curso || !nombre || !motivo) {
+        e.preventDefault();
+        alert("Selecciona un horario y completa todos los campos.");
+      }
+    });
+  }
+</script>
+{% endblock %}

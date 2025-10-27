@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Docentes - Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Docentes</h1>
+  <form method="get" class="d-flex" role="search">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nombre o correo">
+    <button class="btn btn-success ms-2">Buscar</button>
+  </form>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Cédula</th>
+          <th>Rol</th>
+          <th>Perfil</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for u in usuarios %}
+        <tr>
+          <td>{{ u.get_full_name|default:"(sin nombre)" }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.cedula }}</td>
+          <td>{% if u.rol %}{{ u.rol.nombre }}{% else %}&mdash;{% endif %}</td>
+          <td>
+            {% if u.perfil_docente %}
+              Bloque: {{ u.perfil_docente.minutos_por_bloque }} min
+            {% else %}
+              <span class="text-muted">No creado</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-success" href="{% url 'editar_perfil_docente' u.id %}">Editar perfil</a>
+            {% if u.perfil_docente %}
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'gestionar_disponibilidad_docente' u.perfil_docente.id %}">Disponibilidad</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Sin docentes.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

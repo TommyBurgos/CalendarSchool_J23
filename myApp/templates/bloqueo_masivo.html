@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Bloqueo masivo (Feriados){% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">Bloqueo masivo — Feriados / Eventos</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+
+      <div class="col-12">
+        <label class="form-label">Nombre</label>
+        {{ form.nombre }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        {{ form.fecha_inicio }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha fin</label>
+        {{ form.fecha_fin }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Hora inicio (opcional)</label>
+        {{ form.hora_inicio }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Hora fin (opcional)</label>
+        {{ form.hora_fin }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Aplicar a</label>
+        {{ form.aplicar_a }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Departamento (si aplica)</label>
+        {{ form.departamento }}
+      </div>
+      <div class="col-12 form-check mt-2">
+        {{ form.reemplazar }} <label class="form-check-label">Reemplazar bloqueos existentes en esas fechas</label>
+      </div>
+
+      <div class="col-12 d-flex">
+        <button class="btn btn-success">Aplicar bloqueo</button>
+        <a href="{% url 'dashboard_admin' %}" class="btn btn-link ms-auto">Volver al panel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="alert alert-info mt-4">
+  <strong>Nota:</strong> Si no especificas horas, se bloqueará el día completo (00:00–23:59).
+</div>
+{% endblock %}

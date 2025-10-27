@@ -1,0 +1,81 @@
+{% extends base_template %}
+
+{% block title %}Mi Perfil{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Mi Perfil</h1>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" class="row g-3">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <label class="form-label">Nombres</label>
+            {{ form.first_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Apellidos</label>
+            {{ form.last_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Cédula (usuario)</label>
+            {{ form.cedula }}
+            <div class="form-text">La cédula es tu usuario; para cambiarla, contacta al administrador.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            {{ form.email }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Imagen de perfil</label>
+            {{ form.imgPerfil }}
+          </div>
+          <div class="col-12">
+            <button class="btn btn-success">Guardar cambios</button>
+            <a href="{% url 'dashboard_admin' %}" class="btn btn-link">Volver</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body text-center">
+        {% if request.user.imgPerfil %}
+          <img src="{{ request.user.imgPerfil.url }}" class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;" alt="Perfil">
+        {% endif %}
+        <h6 class="mb-1">{{ request.user.get_full_name|default:request.user.email }}</h6>
+        <div class="text-muted small">
+          {% if request.user.rol %}{{ request.user.rol.nombre }}{% else %}Sin rol{% endif %}
+        </div>
+      </div>
+      {% if perfil_docente %}
+      <div class="list-group list-group-flush">
+        <div class="list-group-item">
+          <div class="small text-muted">Docente</div>
+          <div>Bloque: {{ perfil_docente.minutos_por_bloque }} min · {% if perfil_docente.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</div>
+          <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'gestionar_disponibilidad_docente' perfil_docente.id %}">Gestionar disponibilidad</a>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if relaciones %}
+      <div class="list-group list-group-flush">
+        <div class="list-group-item">
+          <div class="small text-muted mb-1">Representados</div>
+          <ul class="mb-0 ps-3">
+            {% for r in relaciones %}
+              <li>{{ r.estudiante.nombre }} — {{ r.estudiante.curso }} {% if r.verificado %}<span class="badge bg-success">Verificado</span>{% else %}<span class="badge bg-warning text-dark">Pendiente</span>{% endif %}</li>
+            {% empty %}
+              <li class="text-muted">Sin relaciones.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

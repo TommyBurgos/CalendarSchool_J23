@@ -1,0 +1,61 @@
+{% extends 'docente/base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h4>Agenda semanal (desde {{ di }})</h4>
+  <div class="row">
+    {% for d, slots, citas in data %}
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">{{ d }} ({{ d|date:'l' }})</div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <strong>Slots libres</strong>
+                <ul class="mb-3">
+                  {% for ini, fin in slots %}
+                    <li>{{ ini|date:'H:i' }} - {{ fin|date:'H:i' }}</li>
+                  {% empty %}
+                    <li>—</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="col-6">
+                <strong>Citas</strong>
+                <ul class="list-unstyled mb-0">
+                  {% for c in citas %}
+                    <li class="mb-2">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ c.inicio|date:'H:i' }}</strong>
+                          – {{ c.nombre_estudiante }}
+                          <small class="text-muted d-block">{{ c.curso_estudiante }}</small>
+                        </div>
+                        <div class="text-end">
+                          {% if c.estado == "PENDIENTE" %}
+                            <form method="post" action="{% url 'cita_confirmar' c.pk %}" class="d-inline">
+                              {% csrf_token %}
+                              <button class="btn btn-sm btn-success">Confirmar</button>
+                            </form>
+                            <a href="{% url 'cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger">Cancelar</a>
+                          {% elif c.estado == "CONFIRMADA" %}
+                            <span class="badge bg-success">{{ c.get_estado_display }}</span>
+                            <a href="{% url 'cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger ms-2">Cancelar</a>
+                          {% elif c.estado == "CANCELADA" %}
+                            <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </li>
+                  {% empty %}
+                    <li>—</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div> <!-- row -->
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
