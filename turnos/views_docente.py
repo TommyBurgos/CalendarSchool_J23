@@ -12,7 +12,12 @@ from .services import generar_slots
 @requiere_rol("Docente")
 def dashboard_docente(request):
     print("INICIE AL USUARIO DOCENTE.")
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")    
     hoy = timezone.localdate()
     citas_hoy = Cita.objects.filter(docente=docente, inicio__date=hoy).order_by("inicio")
     return render(request, "docente/dashboard.html", {
@@ -23,13 +28,23 @@ def dashboard_docente(request):
 # -------- Disponibilidad semanal --------
 @requiere_rol("Docente")
 def disponibilidad_list(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     items = DisponibilidadSemanal.objects.filter(docente=docente).order_by("dia_semana","hora_inicio")
     return render(request, "docente/disponibilidad_list.html", {"items": items})
 
 @requiere_rol("Docente")
 def disponibilidad_create(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     if request.method == "POST":
         form = DisponibilidadSemanalForm(request.POST)
         if form.is_valid():
@@ -48,7 +63,12 @@ def disponibilidad_create(request):
 
 @requiere_rol("Docente")
 def disponibilidad_delete(request, pk):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     obj = get_object_or_404(DisponibilidadSemanal, pk=pk, docente=docente)
     if request.method == "POST":
         obj.delete()
@@ -59,13 +79,23 @@ def disponibilidad_delete(request, pk):
 # -------- Excepciones (EXTRA / BLOQUEO) --------
 @requiere_rol("Docente")
 def excepciones_list(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     items = ExcepcionDisponibilidad.objects.filter(docente=docente).order_by("-fecha","hora_inicio")
     return render(request, "docente/excepciones_list.html", {"items": items})
 
 @requiere_rol("Docente")
 def excepciones_create(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     if request.method == "POST":
         form = ExcepcionDisponibilidadForm(request.POST)
         if form.is_valid():
@@ -84,7 +114,12 @@ def excepciones_create(request):
 
 @requiere_rol("Docente")
 def excepciones_delete(request, pk):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     obj = get_object_or_404(ExcepcionDisponibilidad, pk=pk, docente=docente)
     if request.method == "POST":
         obj.delete()
@@ -95,7 +130,12 @@ def excepciones_delete(request, pk):
 # -------- Agenda --------
 @requiere_rol("Docente")
 def agenda_dia(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     fecha_str = request.GET.get("fecha")
     fecha = timezone.localdate() if not fecha_str else datetime.strptime(fecha_str, "%Y-%m-%d").date()
     starts = generar_slots(docente, fecha)  # datetimes aware de inicio
@@ -109,7 +149,12 @@ def agenda_dia(request):
 
 @requiere_rol("Docente")
 def agenda_semana(request):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     base = timezone.localdate()
     di = base - timezone.timedelta(days=base.weekday())
     dias = [di + timezone.timedelta(days=i) for i in range(7)]
@@ -129,7 +174,12 @@ from .models import EstadoCita
 @requiere_rol("Docente")
 @require_POST
 def cita_confirmar(request, pk):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     c = get_object_or_404(Cita, pk=pk, docente=docente)
     c.estado = EstadoCita.CONFIRMADA
     c.full_clean(); c.save()
@@ -138,7 +188,12 @@ def cita_confirmar(request, pk):
 
 @requiere_rol("Docente")
 def cita_cancelar(request, pk):
-    docente = get_object_or_404(PerfilDocente, usuario=request.user)
+    docente, creado = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+    if creado:
+        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
     c = get_object_or_404(Cita, pk=pk, docente=docente)
     if request.method == "POST":
         motivo = (request.POST.get("motivo") or "").strip()

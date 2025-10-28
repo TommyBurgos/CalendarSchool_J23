@@ -1,0 +1,7 @@
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+mysite/settings.py
