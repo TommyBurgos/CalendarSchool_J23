@@ -62,6 +62,14 @@
               <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'agenda_semana' %}active{% endif %}"
                  href="{% url 'agenda_semana' %}">Agenda semana</a>
             </li>
+            {% if ROL_NOMBRE == "DocenteAdministrador" %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'resumen_hoy' %}">Resumen (Coordinador)</a>
+            </li>
+            <!--<li class="nav-item">
+              <a class="nav-link" href="{% url 'dashboard_docente' %}">Modo Docente</a>
+            </li>-->
+            {% endif %}
           </ul>
 
           <!-- Perfil / sesión -->

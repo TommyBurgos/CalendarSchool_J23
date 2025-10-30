@@ -17,11 +17,13 @@ from turnos.forms import CargaCSVDocentesForm
 from datetime import timedelta, datetime
 from django.db import transaction
 from django.utils import timezone
+from user.decorators import requiere_roles
+
 
 
 User = get_user_model()
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def cargar_estudiantes(request):
     if request.method == "POST":
         form = CargaCSVForm(request.POST, request.FILES)
@@ -113,7 +115,7 @@ def cargar_estudiantes(request):
     return render(request, "cargar_estudiantes.html", {"form": form})
 
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def descargar_formato_estudiantes(request):
     contenido = (
         "cedula,nombre,curso,representante_cedula,representante_email,parentesco,verificado\n"
@@ -125,7 +127,7 @@ def descargar_formato_estudiantes(request):
     response["Content-Disposition"] = 'attachment; filename="formato_estudiantes.csv"'
     return response
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def listar_docentes(request):
     # Usuarios con rol Docente o candidatos a serlo (filtro rápido por texto)
     q = (request.GET.get("q") or "").strip().lower()
@@ -136,7 +138,7 @@ def listar_docentes(request):
     usuarios = usuarios.order_by("first_name","last_name","email")
     return render(request, "docentes_listar.html", {"usuarios": usuarios, "q": q})
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def editar_perfil_docente(request, user_id):
     rol_doc, _ = Rol.objects.get_or_create(nombre="Docente")
     usuario = get_object_or_404(User, pk=user_id)
@@ -153,7 +155,7 @@ def editar_perfil_docente(request, user_id):
         form = PerfilDocenteForm(instance=perfil)
     return render(request, "docente_editar.html", {"usuario": usuario, "form": form, "perfil": perfil})
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def gestionar_disponibilidad_docente(request, docente_id):
     docente = get_object_or_404(PerfilDocente, pk=docente_id)
     form_disp = DisponibilidadSemanalForm(request.POST or None)
@@ -197,7 +199,7 @@ def gestionar_disponibilidad_docente(request, docente_id):
         "form_exc": form_exc,
     })
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def eliminar_disponibilidad(request, disp_id):
     disp = get_object_or_404(DisponibilidadSemanal, pk=disp_id)
     docente_id = disp.docente.id
@@ -205,7 +207,7 @@ def eliminar_disponibilidad(request, disp_id):
     messages.info(request, "Franja eliminada.")
     return redirect("gestionar_disponibilidad_docente", docente_id=docente_id)
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def eliminar_excepcion(request, exc_id):
     exc = get_object_or_404(ExcepcionDisponibilidad, pk=exc_id)
     docente_id = exc.docente.id
@@ -242,7 +244,7 @@ def _parsear_disponibilidad(cadena:str):
         resultado.append((ABREV_DIA[abrev], ini, fin))
     return resultado, errores
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def cargar_docentes(request):
     if request.method == "POST":
         form = CargaCSVDocentesForm(request.POST, request.FILES)
@@ -346,7 +348,7 @@ def cargar_docentes(request):
 
     return render(request, "cargar_docentes.html", {"form": form})
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def formato_docentes(request):
     contenido = (
         "cedula,email,nombres,apellidos,telefono,departamento,minutos_por_bloque,maximo_citas_diarias,activo,disponibilidad,reemplazar_disponibilidad\n"
@@ -364,7 +366,7 @@ def _daterange(d1, d2):
         yield cur
         cur += timedelta(days=1)
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 @transaction.atomic
 def bloqueo_masivo(request):
     if request.method == "POST":

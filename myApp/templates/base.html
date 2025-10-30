@@ -57,6 +57,16 @@
             <li><a class="dropdown-item" href="{% url 'bloqueo_masivo' %}">Bloqueo masivo (feriados)</a></li>
           </ul>
         </li>
+
+        {% if ROL_NOMBRE == "DocenteAdministrador" %}
+        <!--<li class="nav-item">
+          <a class="nav-link" href="{% url 'resumen_hoy' %}">Resumen (Coordinador)</a>
+        </li>-->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'dashboard_docente' %}">Modo Docente</a>
+        </li>
+        {% endif %}
+
         {% endif %}
       </ul>
 

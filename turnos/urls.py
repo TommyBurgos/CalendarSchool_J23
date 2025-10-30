@@ -1,6 +1,6 @@
 from . import views
 from django.urls import path
-from . import views_admin, views_slots, views_docente, views_representante
+from . import views_admin, views_slots, views_docente, views_representante, views_coordinador
 
 
 urlpatterns = [
@@ -16,9 +16,14 @@ urlpatterns = [
     path("slots/", views_slots.api_slots, name="api_slots"),
     path("panel/admin/bloqueos/", views_admin.bloqueo_masivo, name="bloqueo_masivo"),
 
+    #COORDINADOR.    
+    # Descarga CSV usando ?export=1 (no necesita ruta extra)
+    path("panel/coordinador/hoy/", views_coordinador.resumen_hoy, name="resumen_hoy"),
+    path("panel/coordinador/semana/", views_coordinador.resumen_semana, name="resumen_semana"),
+  
+
     #DOCENTE
     path("docente/", views_docente.dashboard_docente, name="dashboard_docente"),
-
     path("docente/disponibilidad/", views_docente.disponibilidad_list, name="disp_list"),
     path("docente/disponibilidad/nuevo/", views_docente.disponibilidad_create, name="disp_create"),
     path("docente/disponibilidad/<int:pk>/eliminar/", views_docente.disponibilidad_delete, name="disp_delete"),

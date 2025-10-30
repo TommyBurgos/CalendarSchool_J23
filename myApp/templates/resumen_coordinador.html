@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load tz %}
+
+{% block content %}
+<div class="container mt-3">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">{{ titulo }}</h3>
+    <div class="btn-group">
+      <a href="{% url 'resumen_hoy' %}?export=1{{ request.GET.urlencode|yesno:'&,' }}" class="btn btn-sm btn-outline-secondary">CSV</a>
+      <a href="{% url 'resumen_hoy' %}" class="btn btn-sm btn-outline-primary">Hoy</a>
+      <a href="{% url 'resumen_semana' %}" class="btn btn-sm btn-outline-secondary">Semana</a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-2">
+      <label class="form-label">Desde</label>
+      <input type="date" name="desde" value="{{ request.GET.desde }}" class="form-control" />
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Hasta</label>
+      <input type="date" name="hasta" value="{{ request.GET.hasta }}" class="form-control" />
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Estado</label>
+      <select name="estado" class="form-select">
+        <option value="">Todos</option>
+        <option value="PENDIENTE" {% if request.GET.estado == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
+        <option value="CONFIRMADA" {% if request.GET.estado == 'CONFIRMADA' %}selected{% endif %}>Confirmada</option>
+        <option value="CANCELADA" {% if request.GET.estado == 'CANCELADA' %}selected{% endif %}>Cancelada</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Departamento</label>
+      <input type="text" name="departamento" value="{{ request.GET.departamento }}" class="form-control" placeholder="Ej: Matemática" />
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+      <div class="card shadow-sm"><div class="card-body">
+        <div class="fs-6 text-muted">Pendientes</div>
+        <div class="fs-3 fw-bold">{{ totales.PENDIENTE|default:0 }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card shadow-sm"><div class="card-body">
+        <div class="fs-6 text-muted">Confirmadas</div>
+        <div class="fs-3 fw-bold">{{ totales.CONFIRMADA|default:0 }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card shadow-sm"><div class="card-body">
+        <div class="fs-6 text-muted">Canceladas</div>
+        <div class="fs-3 fw-bold">{{ totales.CANCELADA|default:0 }}</div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-responsive mb-5">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Inicio</th><th>Fin</th><th>Docente</th><th>Depto</th>
+          <th>Representante</th><th>Estudiante / Curso</th><th>Estado</th><th>Motivo</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for c in citas %}
+        <tr>
+          <td>{{ c.inicio|localtime|date:"Y-m-d H:i" }}</td>
+          <td>{{ c.fin|localtime|date:"H:i" }}</td>
+          <td>{{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}</td>
+          <td>{{ c.docente.departamento }}</td>
+          <td>{{ c.representante.get_full_name|default:c.representante.username }}</td>
+          <td>{{ c.nombre_estudiante }} — {{ c.curso_estudiante }}</td>
+          <td>
+            <span class="badge bg-{% if c.estado == 'CONFIRMADA' %}success{% elif c.estado == 'CANCELADA' %}secondary{% else %}warning text-dark{% endif %}">
+              {{ c.get_estado_display }}
+            </span>
+          </td>
+          <td class="text-truncate" style="max-width: 280px;">{{ c.motivo }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="text-center text-muted">Sin resultados.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

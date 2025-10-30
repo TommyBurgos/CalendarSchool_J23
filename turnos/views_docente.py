@@ -8,8 +8,9 @@ from user.decorators import requiere_rol
 from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Cita
 from .forms import DisponibilidadSemanalForm, ExcepcionDisponibilidadForm
 from .services import generar_slots
+from user.decorators import requiere_roles
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def dashboard_docente(request):
     print("INICIE AL USUARIO DOCENTE.")
     docente, creado = PerfilDocente.objects.get_or_create(
@@ -26,7 +27,7 @@ def dashboard_docente(request):
     })
 
 # -------- Disponibilidad semanal --------
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_list(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -37,7 +38,7 @@ def disponibilidad_list(request):
     items = DisponibilidadSemanal.objects.filter(docente=docente).order_by("dia_semana","hora_inicio")
     return render(request, "docente/disponibilidad_list.html", {"items": items})
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_create(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -61,7 +62,7 @@ def disponibilidad_create(request):
         form = DisponibilidadSemanalForm()
     return render(request, "docente/disponibilidad_form.html", {"form": form})
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_delete(request, pk):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -77,7 +78,7 @@ def disponibilidad_delete(request, pk):
     return render(request, "confirm_delete.html", {"obj": obj})
 
 # -------- Excepciones (EXTRA / BLOQUEO) --------
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_list(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -88,7 +89,7 @@ def excepciones_list(request):
     items = ExcepcionDisponibilidad.objects.filter(docente=docente).order_by("-fecha","hora_inicio")
     return render(request, "docente/excepciones_list.html", {"items": items})
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_create(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -112,7 +113,7 @@ def excepciones_create(request):
         form = ExcepcionDisponibilidadForm()
     return render(request, "docente/excepciones_form.html", {"form": form})
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_delete(request, pk):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -128,7 +129,7 @@ def excepciones_delete(request, pk):
     return render(request, "confirm_delete.html", {"obj": obj})
 
 # -------- Agenda --------
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def agenda_dia(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -147,7 +148,7 @@ def agenda_dia(request):
         "fecha": fecha, "slots": slots, "citas": citas
     })
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def agenda_semana(request):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
@@ -171,7 +172,7 @@ def agenda_semana(request):
 from django.views.decorators.http import require_POST
 from .models import EstadoCita
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 @require_POST
 def cita_confirmar(request, pk):
     docente, creado = PerfilDocente.objects.get_or_create(
@@ -186,7 +187,7 @@ def cita_confirmar(request, pk):
     messages.success(request, "Cita confirmada.")
     return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
 
-@requiere_rol("Docente")
+@requiere_roles("Docente", "DocenteAdministrador")
 def cita_cancelar(request, pk):
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
