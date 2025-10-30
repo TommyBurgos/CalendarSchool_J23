@@ -104,7 +104,12 @@
                 <td>{{ e.fecha }}</td>
                 <td>{{ e.hora_inicio|time:"H:i" }}</td>
                 <td>{{ e.hora_fin|time:"H:i" }}</td>
-                <td><span class="badge {{ 'bg-danger' if e.tipo == 'BLOQUEO' else 'bg-primary' }}">{{ e.tipo }}</span></td>
+                <td>
+                  <span class="badge {% if e.tipo == 'BLOQUEO' %}bg-danger{% else %}bg-primary{% endif %}">
+                    {{ e.get_tipo_display }}
+                  </span>
+                </td>
+
                 <td class="text-end">
                   <a href="{% url 'eliminar_excepcion' e.id %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
                 </td>
