@@ -1,5 +1,5 @@
 # turnos/views_docente.py
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -9,6 +9,9 @@ from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilida
 from .forms import DisponibilidadSemanalForm, ExcepcionDisponibilidadForm
 from .services import generar_slots
 from user.decorators import requiere_roles
+
+from calendar import monthrange
+
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def dashboard_docente(request):
@@ -205,3 +208,56 @@ def cita_cancelar(request, pk):
         messages.info(request, "Cita cancelada.")
         return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
     return render(request, "turnos/docente/cita_cancelar_confirm.html", {"cita": c})
+
+@requiere_roles("Docente", "DocenteAdministrador")
+def calendario_mes(request):
+    docente, _ = PerfilDocente.objects.get_or_create(
+        usuario=request.user,
+        defaults={"minutos_por_bloque": 20, "activo": True},
+    )
+
+    # Mes actual o mes enviado por GET
+    hoy = timezone.localdate()
+    y = int(request.GET.get("y", hoy.year))
+    m = int(request.GET.get("m", hoy.month))
+
+    # Rango del mes
+    _, dias_en_mes = monthrange(y, m)
+    dias = [date(y, m, d) for d in range(1, dias_en_mes + 1)]
+
+    # Consultas para marcar el calendario
+    citas = Cita.objects.filter(docente=docente, inicio__year=y, inicio__month=m)
+
+    dias_con_citas = {c.inicio.date() for c in citas}
+
+    # Disponibilidad semanal (lunes=0)
+    disp_por_dia = {
+        d.dia_semana for d in DisponibilidadSemanal.objects.filter(docente=docente)
+    }
+
+    # Excepciones (bloqueos)
+    bloqueos = ExcepcionDisponibilidad.objects.filter(docente=docente, fecha__year=y, fecha__month=m)
+    dias_bloqueados = {b.fecha for b in bloqueos}
+
+    calendario = []
+    for d in dias:
+        estado = "sin_disp"
+        if d in dias_bloqueados:
+            estado = "bloqueado"
+        elif d.weekday() in disp_por_dia:
+            estado = "libre"
+        if d in dias_con_citas:
+            estado = "con_citas"
+
+        calendario.append((d, estado))
+
+    # Navegación
+    mes_ant = (date(y, m, 1) - timedelta(days=1))
+    mes_sig = (date(y, m, dias_en_mes) + timedelta(days=1))
+
+    return render(request, "docente/calendario_mes.html", {
+        "calendario": calendario,
+        "y": y, "m": m,
+        "mes_ant": mes_ant,
+        "mes_sig": mes_sig,
+    })

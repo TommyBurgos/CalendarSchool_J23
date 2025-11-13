@@ -34,6 +34,8 @@ urlpatterns = [
 
     path("docente/agenda/dia/", views_docente.agenda_dia, name="agenda_dia"),
     path("docente/agenda/semana/", views_docente.agenda_semana, name="agenda_semana"),
+    path("docente/calendario/", views_docente.calendario_mes, name="calendario_mes"),
+
     # turnos/urls.py
     path("docente/cita/<int:pk>/confirmar/", views_docente.cita_confirmar, name="cita_confirmar"),
     path("docente/cita/<int:pk>/cancelar/", views_docente.cita_cancelar, name="cita_cancelar"),
