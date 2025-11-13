@@ -1,0 +1,33 @@
+{% extends 'docente/base.html' %}
+{% block content %}
+
+<h3 class="mb-3">Calendario de {{ m }}/{{ y }}</h3>
+
+<div class="d-flex justify-content-between mb-3">
+  <a class="btn btn-outline-primary" href="?y={{ mes_ant.year }}&m={{ mes_ant.month }}">« Mes anterior</a>
+  <a class="btn btn-outline-primary" href="?y={{ mes_sig.year }}&m={{ mes_sig.month }}">Mes siguiente »</a>
+</div>
+
+<style>
+  .dia { width:110px; height:90px; padding:5px; border-radius:8px; }
+  .sin_disp   { background:#e9ecef; }
+  .libre      { background:#d4edda; }
+  .con_citas  { background:#f8d7da; }
+  .bloqueado  { background:#ffc107; }
+  .dia a { text-decoration:none; color:black; }
+</style>
+
+<div class="d-flex flex-wrap">
+  {% for d, estado in calendario %}
+    <div class="dia {{ estado }} m-1 text-center">
+      <a href="{% url 'agenda_dia' %}?fecha={{ d|date:'Y-m-d' }}">
+        <strong>{{ d.day }}</strong><br>
+        {% if estado == 'con_citas' %}<small>Citas</small>{% endif %}
+        {% if estado == 'libre' %}<small>Disponible</small>{% endif %}
+        {% if estado == 'bloqueado' %}<small>Bloqueado</small>{% endif %}
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
