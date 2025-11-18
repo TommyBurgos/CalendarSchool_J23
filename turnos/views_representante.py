@@ -16,7 +16,7 @@ from .services import cancelar_cita_por_representante
 from .emailing import enviar_notificacion, obtener_emails_admins
 
 from datetime import timedelta
-from .forms_representante import BuscarSemanaForm
+from .forms_representante import BuscarSemanaForm, RelacionRepresentacion
 
 
 TZ = timezone.get_current_timezone()
@@ -25,6 +25,7 @@ TZ = timezone.get_current_timezone()
 @requiere_rol("Representante")
 @require_http_methods(["GET", "POST"])
 def rep_buscar_slots(request):
+    form_reserva = ReservaCitaForm(representante=request.user)
     # Bind según método (tu form de búsqueda ahora es GET)
     if request.method == "GET":
         form = BuscarSlotsForm(request.GET or None)
@@ -56,20 +57,26 @@ def rep_buscar_slots(request):
         messages.error(request, "Revisa los datos del formulario.")
 
     return render(request, "representante/buscar_slots.html", {
-        "form": form, "docente": docente, "fecha": fecha, "slots": slots, "minuto": minuto
+        "form": form, "docente": docente, "fecha": fecha, "slots": slots, "minuto": minuto,"form_reserva": form_reserva,
     })
 
 
 @requiere_rol("Representante")
 @require_POST
 def rep_reservar_cita(request):
-    form = ReservaCitaForm(request.POST)
+    form_reserva = ReservaCitaForm(representante=request.user)
+
+    # El form ahora requiere el parámetro representante
+    form = ReservaCitaForm(request.POST, representante=request.user)
     print(form)
+
     if not form.is_valid():
         messages.error(request, "Por favor completa todos los datos de la cita.")
-        # Reconstruir la pantalla de búsqueda con el mismo docente/fecha si podemos
+
+        # Reconstruir pantalla de búsqueda
         docente_id = request.POST.get("docente_id")
         docente = get_object_or_404(PerfilDocente, pk=docente_id) if docente_id else None
+
         fecha_str = request.POST.get("inicio_iso", "")[:10]  # YYYY-MM-DD
         fecha = None
         try:
@@ -77,7 +84,6 @@ def rep_reservar_cita(request):
         except Exception:
             pass
 
-        # Armar los slots de ese día para que el usuario reintente
         slots = []
         minuto = None
         if docente and fecha:
@@ -92,33 +98,42 @@ def rep_reservar_cita(request):
             "fecha": fecha,
             "slots": slots,
             "minuto": minuto,
-            # Opcional: pasar errores del form de reserva
+            "form_reserva": form_reserva,
             "form_reserva_errors": form.errors,
         })
 
+    # Form válido → procesar reserva
     docente = get_object_or_404(PerfilDocente, pk=form.cleaned_data["docente_id"])
-    # parse inicio aware
+
     ini = datetime.fromisoformat(form.cleaned_data["inicio_iso"])  # naive
     inicio = timezone.make_aware(ini, TZ)
+
+    # Obtener relación seleccionada
+    rel = form.cleaned_data["estudiante_rel"]
+    curso_est = rel.estudiante.curso
+    nombre_est = rel.estudiante.nombre
 
     try:
         reservar_cita(
             docente=docente,
             representante=request.user,
-            curso_estudiante=form.cleaned_data["curso_estudiante"],
-            nombre_estudiante=form.cleaned_data["nombre_estudiante"],
+            curso_estudiante=curso_est,
+            nombre_estudiante=nombre_est,
             motivo=form.cleaned_data["motivo"],
             inicio=inicio,
         )
-        messages.success(request, "Cita creada exitosamente. Queda pendiente de confirmación.")
+        messages.success(request, "Cita creada y confirmada exitosamente.")
         return redirect("rep_mis_citas")
+
     except Exception as e:
         messages.error(request, str(e))
-        # Mismo fallback de arriba para reintento:
+
+        # Fallback para reintento
         fecha = inicio.date()
         minuto = docente.minutos_por_bloque or 20
         starts = generar_slots(docente, fecha)
         slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
+
         buscar_form = BuscarSlotsForm(initial={"docente": docente, "fecha": fecha})
         return render(request, "representante/buscar_slots.html", {
             "form": buscar_form,
@@ -126,7 +141,9 @@ def rep_reservar_cita(request):
             "fecha": fecha,
             "slots": slots,
             "minuto": minuto,
+            "form_reserva": form_reserva,
         })
+
 
 @requiere_rol("Representante")
 def rep_mis_citas(request):
@@ -197,3 +214,44 @@ def rep_buscar_semana(request):
     "minuto": minuto,
     "today": timezone.localdate(),  # 👈 para el botón Semana actual
 })
+
+from .services import proponer_cita
+
+@requiere_rol("Representante")
+@require_POST
+def rep_proponer_cita(request):
+    docente_id = request.POST.get("docente_id")
+    fecha = request.POST.get("fecha")
+    hora = request.POST.get("hora")
+    motivo = request.POST.get("motivo")
+
+    docente = get_object_or_404(PerfilDocente, pk=docente_id)
+
+    # Construir datetime
+    ini = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+    inicio = timezone.make_aware(ini, TZ)
+
+    # Tomar estudiante como ya lo haces
+    rel = RelacionRepresentacion.objects.filter(
+        representante=request.user, activo=True
+    ).first()
+
+    if not rel:
+        messages.error(request, "No tienes estudiantes registrados.")
+        return redirect("rep_buscar")
+
+    try:
+        proponer_cita(
+            docente=docente,
+            representante=request.user,
+            curso_estudiante=rel.estudiante.curso,
+            nombre_estudiante=rel.estudiante.nombre,
+            motivo=motivo,
+            inicio=inicio
+        )
+        messages.success(request, "Horario propuesto. Queda pendiente de aprobación del docente.")
+        return redirect("rep_mis_citas")
+
+    except Exception as e:
+        messages.error(request, str(e))
+        return redirect("rep_buscar")

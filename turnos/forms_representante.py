@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import PerfilDocente
+from turnos.models import RelacionRepresentacion
 
 
 class BuscarSlotsForm(forms.Form):
@@ -23,10 +24,27 @@ class BuscarSlotsForm(forms.Form):
 
 class ReservaCitaForm(forms.Form):
     docente_id = forms.IntegerField(widget=forms.HiddenInput())
-    inicio_iso = forms.CharField(widget=forms.HiddenInput()) # ISO 8601
-    curso_estudiante = forms.CharField(label="Curso", max_length=100, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "p.ej. 8vo A"}))
-    nombre_estudiante = forms.CharField(label="Nombre del estudiante", max_length=120, widget=forms.TextInput(attrs={"class": "form-control"}))
-    motivo = forms.CharField(label="Motivo", widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    inicio_iso = forms.CharField(widget=forms.HiddenInput())
+
+    estudiante_rel = forms.ModelChoiceField(
+        queryset=None,
+        label="Estudiante",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    motivo = forms.CharField(
+        label="Motivo",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
+    )
+
+    def __init__(self, *args, representante=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if representante:
+            self.fields["estudiante_rel"].queryset = RelacionRepresentacion.objects.filter(
+                representante=representante, activo=True
+            ).select_related("estudiante")
+
 
 class BuscarSemanaForm(forms.Form):
     docente = forms.ModelChoiceField(

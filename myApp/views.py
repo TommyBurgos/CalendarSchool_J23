@@ -18,6 +18,7 @@ from turnos.forms import FiltroCitasForm
 import csv
 from django.http import HttpResponse
 from turnos.forms import FiltroCitasForm
+from user.decorators import requiere_roles
 
 
 # Create your views here.
@@ -27,7 +28,7 @@ def home(request):
 def registro(request):
     return render(request, 'sitioWeb/sign-up.html')
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def dashboard_admin(request):
     print("INICIE AL USUARIO ADMINISTRADOR.")
     tz = timezone.get_current_timezone()
@@ -98,7 +99,7 @@ def dashboard_admin(request):
 # ------------------------
 # Acciones rápidas
 # ------------------------
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 @require_POST
 def confirmar_cita_admin(request, pk):
     cita = get_object_or_404(Cita, pk=pk)
@@ -116,7 +117,7 @@ def confirmar_cita_admin(request, pk):
     messages.success(request, "Cita confirmada.")
     return redirect(request.META.get("HTTP_REFERER", "dashboard_admin"))
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 @require_POST
 def cancelar_cita_admin(request, pk):
     cita = get_object_or_404(Cita, pk=pk)
@@ -132,7 +133,7 @@ def cancelar_cita_admin(request, pk):
     messages.success(request, "Cita cancelada.")
     return redirect(request.META.get("HTTP_REFERER", "dashboard_admin"))
     
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def exportar_citas_csv(request):
     # Reusar los filtros del dashboard
     hoy = timezone.localdate()
@@ -176,7 +177,7 @@ def exportar_citas_csv(request):
         ])
     return resp
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def cita_detalle_admin(request, pk):
     c = get_object_or_404(
         Cita.objects.select_related("docente__usuario","representante","estudiante"),
@@ -184,7 +185,7 @@ def cita_detalle_admin(request, pk):
     )
     return render(request, "cita_detalle.html", {"c": c})
 
-@requiere_rol("Administrador")
+@requiere_roles("Administrador", "DocenteAdministrador")
 def agenda_global_admin(request):
     hoy = timezone.localdate()
     form = FiltroCitasForm(request.GET or None)

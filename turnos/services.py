@@ -247,7 +247,7 @@ def reservar_cita(
         motivo=motivo,
         inicio=inicio,
         fin=fin,
-        estado=EstadoCita.PENDIENTE,
+        estado=EstadoCita.CONFIRMADA,
     )
     cita.full_clean()
     cita.save()
@@ -359,3 +359,23 @@ def cancelar_cita_por_docente(*, cita: Cita, usuario_docente, motivo: str = "") 
     )
 
     return cita
+
+def proponer_cita(*, docente, representante, curso_estudiante, nombre_estudiante, motivo, inicio):
+    # Evitar solapamientos
+    if Cita.objects.filter(docente=docente, inicio=inicio).exists():
+        raise Exception("El docente ya tiene una cita en ese horario.")
+
+    # Duración según configuración del docente (default: 20 min)
+    minutos = docente.minutos_por_bloque or 20
+    fin = inicio + timedelta(minutes=minutos)
+
+    return Cita.objects.create(
+        docente=docente,
+        representante=representante,
+        curso_estudiante=curso_estudiante,
+        nombre_estudiante=nombre_estudiante,
+        motivo=motivo,
+        inicio=inicio,
+        fin=fin,
+        estado="PROPUESTA",
+    )

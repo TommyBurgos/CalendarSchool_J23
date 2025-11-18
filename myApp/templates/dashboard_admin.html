@@ -76,19 +76,18 @@
                   </span>
                 </td>
                 <td class="text-end">
-                  {% if c.estado == 'PENDIENTE' %}
+                  {% if c.estado == "PROPUESTA" %}
                   <form method="post" action="{% url 'confirmar_cita_admin' c.pk %}" class="d-inline">
-                    {% csrf_token %}
-                    <button class="btn btn-sm btn-outline-success">Confirmar</button>
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-success">Aprobar</button>
+                  </form>
+
+                  <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-danger">Rechazar</button>
                   </form>
                   {% endif %}
-                  {% if c.estado != 'CANCELADA' %}
-                  <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="d-inline ms-1">
-                    {% csrf_token %}
-                    <input type="hidden" name="motivo" value="Cancelada por administrador">
-                    <button class="btn btn-sm btn-outline-danger">Cancelar</button>
-                  </form>
-                  {% endif %}
+
                   <a href="{% url 'cita_detalle_admin' c.pk %}" class="btn btn-sm btn-outline-secondary">Ver</a>
                 </td>
               </tr>

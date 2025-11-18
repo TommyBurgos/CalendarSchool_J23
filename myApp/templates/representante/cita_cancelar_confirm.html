@@ -1,18 +1,29 @@
-{% extends 'representante/base_representante.html' %}
+{% extends 'representante/base.html' %}
 {% block content %}
-<div class="container py-5" style="max-width:680px;">
+
+<div class="container py-4">
+
   <h4>Cancelar cita</h4>
-  <p>
-    Cita con <strong>{{ cita.docente.usuario.get_full_name|default:cita.docente.usuario.username }}</strong><br>
-    Fecha y hora: <strong>{{ cita.inicio|date:"Y-m-d H:i" }}</strong>
-  </p>
-  <form method="post">{% csrf_token %}
+
+  <div class="alert alert-warning">
+    <strong>¿Seguro?</strong><br>
+    Vas a cancelar la cita del <strong>{{ cita.inicio|date:"d/m/Y H:i" }}</strong>
+    con el docente
+    <strong>{{ cita.docente.usuario.get_full_name|default:cita.docente.usuario.username }}</strong>.
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
     <div class="mb-3">
-      <label class="form-label">Motivo (opcional)</label>
-      <textarea name="motivo" class="form-control" rows="3" placeholder="Motivo de la cancelación"></textarea>
+      <label class="form-label">Motivo de cancelación</label>
+      <textarea name="motivo" class="form-control" rows="2" required></textarea>
     </div>
-    <button class="btn btn-danger">Sí, cancelar</button>
-    <a href="{% url 'turnos:rep_mis_citas' %}" class="btn btn-secondary">Volver</a>
+
+    <button class="btn btn-danger">Confirmar cancelación</button>
+    <a href="{% url 'rep_mis_citas' %}" class="btn btn-secondary">Volver</a>
   </form>
+
 </div>
+
 {% endblock %}

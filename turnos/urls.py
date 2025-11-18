@@ -16,6 +16,10 @@ urlpatterns = [
     path("slots/", views_slots.api_slots, name="api_slots"),
     path("panel/admin/bloqueos/", views_admin.bloqueo_masivo, name="bloqueo_masivo"),
 
+    path("cita/<int:pk>/aprobar/", views_admin.cita_aprobar, name="cita_aprobar"),
+    path("cita/<int:pk>/rechazar/", views_admin.cita_rechazar, name="cita_rechazar"),
+
+
     #COORDINADOR.    
     # Descarga CSV usando ?export=1 (no necesita ruta extra)
     path("panel/coordinador/hoy/", views_coordinador.resumen_hoy, name="resumen_hoy"),
@@ -46,6 +50,8 @@ urlpatterns = [
     path("representante/mis-citas/", views_representante.rep_mis_citas, name="rep_mis_citas"),
     path("representante/cita/<int:pk>/cancelar/", views_representante.rep_cita_cancelar, name="rep_cita_cancelar"),
     path("representante/buscar-semana/", views_representante.rep_buscar_semana, name="rep_buscar_semana"),
+    path("representante/proponer/", views_representante.rep_proponer_cita, name="rep_proponer"),
+
 
 
 

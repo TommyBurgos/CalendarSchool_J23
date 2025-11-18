@@ -9,10 +9,11 @@ from django.http import HttpResponse
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, TipoExcepcion, FeriadoInstitucional
+from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, TipoExcepcion, FeriadoInstitucional, Cita
 from .forms import PerfilDocenteForm, DisponibilidadSemanalForm, ExcepcionDisponibilidadForm, BloqueoMasivoForm
 
 from turnos.forms import CargaCSVDocentesForm
+from django.views.decorators.http import require_POST
 
 from datetime import timedelta, datetime
 from django.db import transaction
@@ -424,3 +425,34 @@ def bloqueo_masivo(request):
         form = BloqueoMasivoForm()
 
     return render(request, "bloqueo_masivo.html", {"form": form})
+
+@requiere_roles("Administrador", "DocenteAdministrador", "Docente")
+@require_POST
+def cita_aprobar(request, pk):
+    cita = get_object_or_404(Cita, pk=pk)
+
+    if cita.estado != "PROPUESTA":
+        messages.error(request, "Solo se pueden aprobar citas en estado PROPUESTA.")
+        return redirect("admin_buscar_citas")
+
+    cita.estado = "CONFIRMADA"
+    cita.save()
+
+    messages.success(request, "Cita aprobada correctamente.")
+    return redirect("admin_buscar_citas")
+
+
+@requiere_roles("Administrador", "DocenteAdministrador", "Docente")
+@require_POST
+def cita_rechazar(request, pk):
+    cita = get_object_or_404(Cita, pk=pk)
+
+    if cita.estado != "PROPUESTA":
+        messages.error(request, "Solo se pueden rechazar citas en estado PROPUESTA.")
+        return redirect("admin_buscar_citas")
+
+    cita.estado = "RECHAZADA"
+    cita.save()
+
+    messages.success(request, "Cita rechazada.")
+    return redirect("admin_buscar_citas")

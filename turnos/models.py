@@ -65,6 +65,8 @@ class EstadoCita(models.TextChoices):
     PENDIENTE = "PENDIENTE", "Pendiente"
     CONFIRMADA = "CONFIRMADA", "Confirmada"
     CANCELADA = "CANCELADA", "Cancelada"
+    PROPUESTA = "PROPUESTA","Propuesta"
+    RECHAZADA = "Rechazada"
 
 
 class Cita(models.Model):
@@ -182,6 +184,11 @@ class Cita(models.Model):
     @property
     def duracion_minutos(self) -> int:
         return int((self.fin - self.inicio).total_seconds() // 60)
+
+    def puede_cancelar(self):
+        ahora = timezone.now()
+        return self.inicio - ahora >= timedelta(hours=24)
+
 
 class DisponibilidadSemanal(models.Model):
     docente = models.ForeignKey("turnos.PerfilDocente", on_delete=models.CASCADE, related_name="disponibilidades")

@@ -22,18 +22,19 @@
       {% endif %}
     </div>
 
-    <div class="mt-4 d-flex">
-      {% if c.estado == 'PENDIENTE' %}
-      <form method="post" action="{% url 'confirmar_cita_admin' c.pk %}" class="me-2">{% csrf_token %}
-        <button class="btn btn-success">Confirmar</button>
+    <div class="mt-4 d-flex">      
+      {% if c.estado == "PROPUESTA" %}
+      <form method="post" action="{% url 'confirmar_cita_admin' c.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-success">Aprobar</button>
+      </form>
+
+      <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-danger">Rechazar</button>
       </form>
       {% endif %}
-      {% if c.estado != 'CANCELADA' %}
-      <form method="post" action="{% url 'cancelar_cita_admin' c.pk %}" class="me-2">{% csrf_token %}
-        <input type="hidden" name="motivo" value="Cancelada por administrador">
-        <button class="btn btn-outline-danger">Cancelar</button>
-      </form>
-      {% endif %}
+
       <a class="btn btn-secondary ms-auto" href="{% url 'dashboard_admin' %}">Volver</a>
     </div>
   </div>

@@ -10,18 +10,22 @@
           — {{ c.docente.usuario.get_full_name|default:c.docente.usuario.username }}
           <div class="text-muted small">{{ c.curso_estudiante }} · {{ c.get_estado_display }}</div>
         </div>
+
         <div class="text-end">
           {% if c.estado != "CANCELADA" %}
-            {% with limite=c.inicio|timesince %}
-            {# Calcula si faltan >= 24h #}
-            {% if c.inicio|date:"U" > now|date:"U"|add:"86400" %}
-              <a href="{% url 'rep_cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger">Cancelar</a>
+            {% if c.puede_cancelar %}
+                <a href="{% url 'rep_cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger">
+                    Cancelar
+                </a>
             {% else %}
-              <button class="btn btn-sm btn-outline-secondary" disabled title="Debe cancelar con 24h de antelación">Cancelar</button>
+                <button class="btn btn-sm btn-outline-secondary" disabled title="Debe cancelar con 24h de antelación">
+                    Cancelar
+                </button>
             {% endif %}
-            {% endwith %}
-          {% endif %}
+        {% endif %}
+
         </div>
+
       </div>
     {% empty %}
       <div class="list-group-item">Aún no tienes citas.</div>

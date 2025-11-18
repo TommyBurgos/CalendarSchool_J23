@@ -17,6 +17,23 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body>
+    {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert 
+           {% if message.tags %}
+              alert-{{ message.tags }}
+           {% else %}
+              alert-info
+           {% endif %}
+        ">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'rep_buscar' %}">
@@ -28,9 +45,9 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
+          <!--<li class="nav-item">
               <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'rep_buscar' %}active{% endif %}" href="{% url 'rep_buscar' %}">Buscar disponibilidad</a>
-            </li>
+            </li>-->
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'rep_buscar_semana' %}active{% endif %}"
                     href="{% url 'rep_buscar_semana' %}">Buscar por semana</a>
@@ -64,7 +81,7 @@
       </div>
     </nav>
 
-
+<!--
 {% if messages %}
   <div class="container mt-3">
     {% for message in messages %}
@@ -74,7 +91,7 @@
       </div>
     {% endfor %}
   </div>
-{% endif %}
+{% endif %}-->
 
 <main class="content-wrap">
     <div class="container py-4">
@@ -92,7 +109,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 {% block extra_js %}{% endblock %}
-```
 
   </body>
 </html>

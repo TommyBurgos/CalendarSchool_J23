@@ -55,38 +55,38 @@
                  href="{% url 'exc_list' %}">Excepciones</a>
             </li>
             <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle 
-       {% if request.resolver_match and request.resolver_match.url_name in 'agenda_dia agenda_semana calendario_mes' %}active{% endif %}"
-       href="#" id="agendaDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Agenda
-    </a>
+              <a class="nav-link dropdown-toggle 
+                {% if request.resolver_match and request.resolver_match.url_name in 'agenda_dia agenda_semana calendario_mes' %}active{% endif %}"
+                href="#" id="agendaDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Agenda
+              </a>
 
-    <ul class="dropdown-menu" aria-labelledby="agendaDropdown">
-        <li>
-            <a class="dropdown-item 
-                {% if request.resolver_match and request.resolver_match.url_name == 'agenda_dia' %}active{% endif %}"
-               href="{% url 'agenda_dia' %}">
-                Agenda día
-            </a>
-        </li>
+              <ul class="dropdown-menu" aria-labelledby="agendaDropdown">
+                  <li>
+                      <a class="dropdown-item 
+                          {% if request.resolver_match and request.resolver_match.url_name == 'agenda_dia' %}active{% endif %}"
+                        href="{% url 'agenda_dia' %}">
+                          Agenda día
+                      </a>
+                  </li>
 
-        <li>
-            <a class="dropdown-item 
-                {% if request.resolver_match and request.resolver_match.url_name == 'agenda_semana' %}active{% endif %}"
-               href="{% url 'agenda_semana' %}">
-                Agenda semana
-            </a>
-        </li>
+                  <li>
+                      <a class="dropdown-item 
+                          {% if request.resolver_match and request.resolver_match.url_name == 'agenda_semana' %}active{% endif %}"
+                        href="{% url 'agenda_semana' %}">
+                          Agenda semana
+                      </a>
+                  </li>
 
-        <li>
-            <a class="dropdown-item 
-                {% if request.resolver_match and request.resolver_match.url_name == 'calendario_mes' %}active{% endif %}"
-               href="{% url 'calendario_mes' %}">
-                Agenda mensual
-            </a>
-        </li>
-    </ul>
-</li>
+                  <li>
+                      <a class="dropdown-item 
+                          {% if request.resolver_match and request.resolver_match.url_name == 'calendario_mes' %}active{% endif %}"
+                        href="{% url 'calendario_mes' %}">
+                          Agenda mensual
+                      </a>
+                  </li>
+              </ul>
+          </li>
 
             {% if ROL_NOMBRE == "DocenteAdministrador" %}
             <li class="nav-item">
