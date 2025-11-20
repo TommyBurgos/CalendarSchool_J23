@@ -1,5 +1,5 @@
 from django import forms
-from .models import PerfilDocente, EstadoCita, PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad
+from .models import PerfilDocente, EstadoCita, PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Materia
 
 class FiltroCitasForm(forms.Form):
     fecha = forms.DateField(
@@ -84,3 +84,15 @@ class BloqueoMasivoForm(forms.Form):
         if data.get("aplicar_a") == "departamento" and not data.get("departamento"):
             self.add_error("departamento", "Indique el departamento.")
         return data
+
+
+class BuscarDocenteMateriaCursoForm(forms.Form):
+    materia = forms.ModelChoiceField(
+        queryset=Materia.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    curso = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: 8vo A"})
+    )

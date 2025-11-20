@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import PerfilDocente
-from turnos.models import RelacionRepresentacion
+from turnos.models import RelacionRepresentacion, Materia, Curso
 
 
 class BuscarSlotsForm(forms.Form):
@@ -64,3 +64,15 @@ class BuscarSemanaForm(forms.Form):
         # Permite ver semanas pasadas si quisieras; para solo futuras, descomenta:
         # if f < timezone.localdate(): raise forms.ValidationError("Seleccione una fecha futura.")
         return f
+
+class BuscarDocenteMateriaCursoForm(forms.Form):
+    materia = forms.ModelChoiceField(
+        queryset=Materia.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    curso = forms.ModelChoiceField(
+    queryset=Curso.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={"class": "form-select"})
+)

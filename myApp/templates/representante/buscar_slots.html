@@ -1,6 +1,26 @@
 {% extends 'representante/base.html' %}
 {% block content %}
+
+
 <div class="container py-4">
+  <h6>Buscar docente por curso y materia</h6>
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-5">
+        {{ filtro_form.materia.label_tag }}
+        {{ filtro_form.materia }}
+    </div>
+
+    <div class="col-md-5">
+        {{ filtro_form.curso.label_tag }}
+        {{ filtro_form.curso }}
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-secondary w-100">Filtrar</button>
+    </div>
+</form>
+
+
   <h4>Buscar disponibilidad</h4>
 
   <!-- 1) BUSCADOR EN GET para evitar choques con el form de reserva -->

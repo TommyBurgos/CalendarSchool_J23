@@ -43,6 +43,29 @@ class PerfilDocente(models.Model):
     def __str__(self):
         return f"Docente: {self.usuario.get_full_name() or self.usuario.username}"
 
+class Materia(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+class Curso(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class DocenteCursoMateria(models.Model):
+    docente = models.ForeignKey("turnos.PerfilDocente", on_delete=models.CASCADE, related_name="asignaciones")
+    materia = models.ForeignKey("turnos.Materia", on_delete=models.CASCADE)
+
+    cursos = models.ManyToManyField("turnos.Curso", related_name="asignaciones")
+
+    def __str__(self):
+        cursos_str = ", ".join(c.nombre for c in self.cursos.all())
+        return f"{self.docente} — {self.materia} — {cursos_str}"
+
 
 class PerfilRepresentante(models.Model):
     """
@@ -60,6 +83,8 @@ class PerfilRepresentante(models.Model):
 
     def __str__(self):
         return f"Representante: {self.usuario.get_full_name() or self.usuario.username}"
+
+
 
 class EstadoCita(models.TextChoices):
     PENDIENTE = "PENDIENTE", "Pendiente"

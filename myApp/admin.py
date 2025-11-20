@@ -7,3 +7,6 @@ from turnos.models import *
 admin.site.register(Rol)
 admin.site.register(Estudiante)
 admin.site.register(RelacionRepresentacion)
+admin.site.register(Materia)
+admin.site.register(DocenteCursoMateria)
+admin.site.register(Curso)

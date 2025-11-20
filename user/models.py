@@ -22,6 +22,19 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=True)
     imgPerfil = models.ImageField(upload_to="users/", default="imageDefault.png")
     rol = models.ForeignKey("user.Rol", null=True, blank=True, on_delete=models.SET_NULL, related_name="usuarios")
+    telefono = models.CharField(
+    max_length=20,
+    null=True,
+    blank=True,
+    help_text="Número de celular en formato internacional, ej: +593987654321",
+    validators=[
+        RegexValidator(
+            r"^\+?\d{7,20}$",
+            "Número de teléfono inválido (use solo dígitos y opcional + al inicio)."
+        )
+    ]
+)
+
 
     def save(self, *args, **kwargs):
         # Normaliza

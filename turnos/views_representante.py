@@ -16,7 +16,7 @@ from .services import cancelar_cita_por_representante
 from .emailing import enviar_notificacion, obtener_emails_admins
 
 from datetime import timedelta
-from .forms_representante import BuscarSemanaForm, RelacionRepresentacion
+from .forms_representante import BuscarSemanaForm, RelacionRepresentacion, BuscarSlotsForm, BuscarDocenteMateriaCursoForm
 
 
 TZ = timezone.get_current_timezone()
@@ -26,7 +26,8 @@ TZ = timezone.get_current_timezone()
 @require_http_methods(["GET", "POST"])
 def rep_buscar_slots(request):
     form_reserva = ReservaCitaForm(representante=request.user)
-    # Bind según método (tu form de búsqueda ahora es GET)
+
+    # FORM PRINCIPAL (docente + fecha), GET por defecto
     if request.method == "GET":
         form = BuscarSlotsForm(request.GET or None)
     else:
@@ -37,29 +38,66 @@ def rep_buscar_slots(request):
     fecha = None
     minuto = None
 
-    if form.is_bound and form.is_valid():
+    # --- FORM DE FILTRO POR MATERIA Y CURSO ---
+    filtro_form = BuscarDocenteMateriaCursoForm(request.GET or None)
+
+    docentes_filtrados = PerfilDocente.objects.all()
+
+    if filtro_form.is_valid():
+        materia = filtro_form.cleaned_data.get("materia")
+        curso = filtro_form.cleaned_data.get("curso")  # curso normalizado (ModelChoiceField)
+
+        if materia:
+            docentes_filtrados = docentes_filtrados.filter(
+                asignaciones__materia=materia
+            )
+
+        if curso:
+            docentes_filtrados = docentes_filtrados.filter(
+                asignaciones__cursos=curso
+            )
+
+    # --- LÓGICA DE BÚSQUEDA DE SLOTS ---
+    if "docente" in request.GET and form.is_valid():
         docente = form.cleaned_data["docente"]
-        fecha = form.cleaned_data["fecha"]                # date
+        fecha = form.cleaned_data["fecha"]
         minuto = docente.minutos_por_bloque or 20
 
-        starts = generar_slots(docente, fecha)            # list[datetime]
+        starts = generar_slots(docente, fecha)
         slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
 
-        # Opcional: mensaje de diagnóstico si no hay slots
         if not slots:
-            messages.info(request,
+            messages.info(
+                request,
                 "No hay horarios disponibles para ese día. "
-                "Posibles causas: sin franjas semanales para ese día, "
-                "excepciones de bloqueo, todas las franjas ocupadas, "
-                "o si es hoy: los horarios ya pasaron."
+                "Posibles causas: sin franjas semanales, "
+                "bloqueos, o que los horarios del día ya pasaron."
             )
-    elif form.is_bound and not form.is_valid():
-        messages.error(request, "Revisa los datos del formulario.")
 
-    return render(request, "representante/buscar_slots.html", {
-        "form": form, "docente": docente, "fecha": fecha, "slots": slots, "minuto": minuto,"form_reserva": form_reserva,
-    })
+    elif "docente" in request.GET:
+        messages.error(request, "Revisa los datos del formulario.")        
 
+    # --- NUEVO: aplicar filtro al selector de docentes ---
+    try:
+        form.fields["docente"].queryset = docentes_filtrados
+    except Exception:
+        pass  # por si el campo no existe por algún motivo
+
+    return render(
+        request,
+        "representante/buscar_slots.html",
+        {
+            "form": form,
+            "docente": docente,
+            "fecha": fecha,
+            "slots": slots,
+            "minuto": minuto,
+            "form_reserva": form_reserva,
+
+            "filtro_form": filtro_form,
+            "docentes_filtrados": docentes_filtrados,
+        }
+    )
 
 @requiere_rol("Representante")
 @require_POST
