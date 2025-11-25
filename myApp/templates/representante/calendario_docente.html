@@ -1,0 +1,145 @@
+{% extends "representante/base.html" %}
+
+{% block content %}
+<style>
+
+  body {
+    background: #f4f6f9;
+  }
+
+  .calendar-wrapper {
+    max-width: 1000px;
+    margin: 35px auto;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+
+  #calendar {
+    border-radius: 12px;
+    background: white;
+    padding: 10px;
+  }
+
+  /* Estilo del título */
+  .fc-toolbar-title {
+    font-size: 1.4rem !important;
+    color: #333;
+    font-weight: 600;
+  }
+
+  /* Botones */
+  .fc .fc-button {
+    background: #285fe2 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    margin: 6px;
+    font-size: 0.85rem;
+  }
+
+  .fc .fc-button:hover {
+    background: #1d4ac4 !important;
+  }
+
+  /* Día con disponibilidad */
+  .dia-disponible {
+    background: #e9f8ee !important;
+    border: 2px solid #a0e6c1 !important;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+  }
+
+  .dia-disponible:hover {
+    background: #d7f3e3 !important;
+    transform: scale(1.02);
+  }
+
+  /* Hover en días normales */
+  .fc-daygrid-day:hover {
+    background: #f8fbff;
+  }
+
+  /* Texto del evento "Disponible" */
+  .fc-event-title {
+    color: #94eeb7 !important;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+</style>
+
+
+<div class="container py-4">
+  <h4>Calendario de disponibilidad</h4>
+  <p class="text-muted mb-3">
+    Docente: <strong>{{ docente.usuario.get_full_name|default:docente.usuario.username }}</strong>
+  </p>
+  <div class="calendar-wrapper">
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<!-- FullCalendar CSS & JS desde CDN (libre y apto producción) -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        themeSystem: 'standard',
+        height: "auto",
+        fixedWeekCount: false,
+        showNonCurrentDates: false,
+        displayEventTime: false,
+        eventColor: "#3bb273",
+
+        headerToolbar: {
+            start: 'prev,next',
+            center: 'title',
+            right: "dayGridMonth,timeGridWeek,timeGridDay"  // Mes, Semana, Día
+        },
+
+        events: {
+          url: '/turnos/api/slots-docente/{{ docente.id }}/',
+          failure: function () {
+            alert("Error cargando disponibilidad");
+          }
+        },
+
+        dateClick: function(info) {
+          const fecha = info.dateStr;
+          const docente_id = "{{ docente.id }}";
+
+          window.location.href = `/turnos/representante/slots-dia/?docente=${docente_id}&fecha=${fecha}`;
+        },
+
+        /* --- NUEVO: Clic en la palabra "Disponible" --- */
+        eventClick: function(info) {
+          const fecha = info.event.startStr;
+          const docente_id = "{{ docente.id }}";
+
+          window.location.href = `/turnos/representante/slots-dia/?docente=${docente_id}&fecha=${fecha}`;
+        },
+
+        /* Aplicar clase CSS personalizada a días con disponibilidad */
+        eventDidMount: function(info) {
+          let cell = info.el.closest(".fc-daygrid-day");
+          if (cell) {
+            cell.classList.add("dia-disponible");
+          }
+        }
+    });
+
+    calendar.render();
+});
+
+</script>
+
+{% endblock %}

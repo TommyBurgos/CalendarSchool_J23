@@ -1,0 +1,35 @@
+{% extends "representante/base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+  <h4>Confirmar cita</h4>
+
+  <div class="alert alert-info">
+    <strong>Docente:</strong> {{ docente.usuario.get_full_name|default:docente.usuario.username }} <br>
+    <strong>Fecha:</strong> {{ inicio|date:"Y-m-d" }} <br>
+    <strong>Hora:</strong> {{ inicio|date:"H:i" }}
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="docente_id" value="{{ docente.id }}">
+    <input type="hidden" name="inicio_iso" value="{{ inicio|date:'Y-m-d\\TH:i:s' }}">
+
+    <div class="mb-3">
+      {{ form.estudiante_rel.label_tag }}
+      {{ form.estudiante_rel }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.motivo.label_tag }}
+      {{ form.motivo }}
+    </div>
+
+    <button class="btn btn-primary">Confirmar reserva</button>
+    <a href="javascript:history.back()" class="btn btn-secondary">Cancelar</a>
+  </form>
+
+</div>
+
+{% endblock %}

@@ -9,12 +9,7 @@ class BuscarSlotsForm(forms.Form):
         queryset=PerfilDocente.objects.filter(activo=True).select_related("usuario"),
         label="Docente",
         widget=forms.Select(attrs={"class": "form-select"}),
-    )
-    fecha = forms.DateField(
-        label="Fecha",
-        input_formats=["%Y-%m-%d"],  # ✅ coincide con <input type="date">
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-    )
+    )    
 
     def clean_fecha(self):
         f = self.cleaned_data["fecha"]

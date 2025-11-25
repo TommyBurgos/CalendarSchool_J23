@@ -86,13 +86,4 @@ class BloqueoMasivoForm(forms.Form):
         return data
 
 
-class BuscarDocenteMateriaCursoForm(forms.Form):
-    materia = forms.ModelChoiceField(
-        queryset=Materia.objects.all(),
-        required=False,
-        widget=forms.Select(attrs={"class": "form-select"})
-    )
-    curso = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: 8vo A"})
-    )
+

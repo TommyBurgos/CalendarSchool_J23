@@ -93,8 +93,7 @@ def mi_perfil(request):
     }
     return render(request, "mi_perfil.html", context)
 
-def post_login_redirect(user, fallback="dashboard"):
-    """Redirige según el rol del usuario."""
+def post_login_redirect(user, fallback="dashboard"):    
     rol = getattr(getattr(user, "rol", None), "nombre", "")
 
     if rol == "Docente":
@@ -102,7 +101,9 @@ def post_login_redirect(user, fallback="dashboard"):
     if rol == "Representante":
         return redirect("rep_buscar")
     if rol == "Administrador":
-        return redirect("dashboard")  # tu panel admin
+        return redirect("dashboard_admin")
+    if rol == "DocenteAdministrador":
+        return redirect("dashboard_admin")
 
     # Sin rol o rol desconocido
     return redirect(fallback)

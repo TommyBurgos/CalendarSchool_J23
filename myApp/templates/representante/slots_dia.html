@@ -1,0 +1,36 @@
+{% extends "representante/base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+  <h4>Horarios disponibles</h4>
+
+  <p class="text-muted">
+    Docente: <strong>{{ docente.usuario.get_full_name|default:docente.usuario.username }}</strong><br>
+    Fecha: <strong>{{ fecha }}</strong>
+  </p>
+
+  <div class="card">
+    <ul class="list-group list-group-flush">
+      {% for ini, fin in slots %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+          <strong>{{ ini|date:'H:i' }}</strong> – {{ fin|date:'H:i' }}
+        </span>
+
+        <a href="{% url 'rep_reservar' %}?docente_id={{ docente.id }}&inicio_iso={{ ini|date:'Y-m-d\\TH:i:s' }}"
+           class="btn btn-success btn-sm">
+          Reservar
+        </a>
+      </li>
+      {% empty %}
+      <li class="list-group-item">No hay disponibilidad este día.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <a href="javascript:history.back()" class="btn btn-secondary mt-3">Volver</a>
+
+</div>
+
+{% endblock %}

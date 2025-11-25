@@ -46,11 +46,17 @@ urlpatterns = [
 
     # --- Representante ---
     path("representante/buscar/", views_representante.rep_buscar_slots, name="rep_buscar"),
-    path("representante/reservar/", views_representante.rep_reservar_cita, name="rep_reservar"),
+    path("representante/reservar/", views_representante.rep_reservar, name="rep_reservar"),
     path("representante/mis-citas/", views_representante.rep_mis_citas, name="rep_mis_citas"),
     path("representante/cita/<int:pk>/cancelar/", views_representante.rep_cita_cancelar, name="rep_cita_cancelar"),
     path("representante/buscar-semana/", views_representante.rep_buscar_semana, name="rep_buscar_semana"),
     path("representante/proponer/", views_representante.rep_proponer_cita, name="rep_proponer"),
+    path("representante/calendario/<int:docente_id>/", views_representante.rep_calendario_docente,
+        name="rep_calendario_docente"),
+    path("api/slots-docente/<int:docente_id>/", views_representante.api_slots_docente,
+    name="api_slots_docente"),
+    path("representante/slots-dia/", views_representante.rep_slots_dia, name="rep_slots_dia"),
+
 
 
 

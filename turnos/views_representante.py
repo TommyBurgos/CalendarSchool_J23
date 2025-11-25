@@ -18,6 +18,9 @@ from .emailing import enviar_notificacion, obtener_emails_admins
 from datetime import timedelta
 from .forms_representante import BuscarSemanaForm, RelacionRepresentacion, BuscarSlotsForm, BuscarDocenteMateriaCursoForm
 
+from django.http import JsonResponse
+from django.utils.timezone import make_aware
+
 
 TZ = timezone.get_current_timezone()
 
@@ -27,78 +30,49 @@ TZ = timezone.get_current_timezone()
 def rep_buscar_slots(request):
     form_reserva = ReservaCitaForm(representante=request.user)
 
-    # FORM PRINCIPAL (docente + fecha), GET por defecto
-    if request.method == "GET":
-        form = BuscarSlotsForm(request.GET or None)
-    else:
-        form = BuscarSlotsForm(request.POST or None)
+    # Form principal: SOLO docente
+    form = BuscarSlotsForm(request.GET or None)
 
-    slots = []
-    docente = None
-    fecha = None
-    minuto = None
-
-    # --- FORM DE FILTRO POR MATERIA Y CURSO ---
+    # Form de filtro
     filtro_form = BuscarDocenteMateriaCursoForm(request.GET or None)
-
     docentes_filtrados = PerfilDocente.objects.all()
 
     if filtro_form.is_valid():
         materia = filtro_form.cleaned_data.get("materia")
-        curso = filtro_form.cleaned_data.get("curso")  # curso normalizado (ModelChoiceField)
+        curso = filtro_form.cleaned_data.get("curso")
 
         if materia:
-            docentes_filtrados = docentes_filtrados.filter(
-                asignaciones__materia=materia
-            )
+            docentes_filtrados = docentes_filtrados.filter(asignaciones__materia=materia)
 
         if curso:
-            docentes_filtrados = docentes_filtrados.filter(
-                asignaciones__cursos=curso
-            )
+            docentes_filtrados = docentes_filtrados.filter(asignaciones__cursos=curso)
 
-    # --- LÓGICA DE BÚSQUEDA DE SLOTS ---
-    if "docente" in request.GET and form.is_valid():
-        docente = form.cleaned_data["docente"]
-        fecha = form.cleaned_data["fecha"]
-        minuto = docente.minutos_por_bloque or 20
+        if materia or curso:
+            messages.success(request, "Filtro aplicado. Ahora selecciona un docente.")
 
-        starts = generar_slots(docente, fecha)
-        slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
-
-        if not slots:
-            messages.info(
-                request,
-                "No hay horarios disponibles para ese día. "
-                "Posibles causas: sin franjas semanales, "
-                "bloqueos, o que los horarios del día ya pasaron."
-            )
-
-    elif "docente" in request.GET:
-        messages.error(request, "Revisa los datos del formulario.")        
-
-    # --- NUEVO: aplicar filtro al selector de docentes ---
+    # Aplicar filtro al selector de docentes
     try:
         form.fields["docente"].queryset = docentes_filtrados
-    except Exception:
-        pass  # por si el campo no existe por algún motivo
+    except:
+        pass
+
+    # Si el formulario principal es válido → ir al calendario
+    if form.is_valid() and "docente" in request.GET:
+        docente = form.cleaned_data["docente"]
+        return redirect(f"/turnos/representante/calendario/{docente.id}/")
 
     return render(
         request,
         "representante/buscar_slots.html",
         {
             "form": form,
-            "docente": docente,
-            "fecha": fecha,
-            "slots": slots,
-            "minuto": minuto,
-            "form_reserva": form_reserva,
-
             "filtro_form": filtro_form,
             "docentes_filtrados": docentes_filtrados,
+            "form_reserva": form_reserva,
         }
     )
 
+"""
 @requiere_rol("Representante")
 @require_POST
 def rep_reservar_cita(request):
@@ -181,6 +155,63 @@ def rep_reservar_cita(request):
             "minuto": minuto,
             "form_reserva": form_reserva,
         })
+"""
+@requiere_rol("Representante")
+@require_http_methods(["GET", "POST"])
+def rep_reservar(request):
+    docente_id = request.GET.get("docente_id") or request.POST.get("docente_id")
+    inicio_iso = request.GET.get("inicio_iso") or request.POST.get("inicio_iso")
+
+    if not docente_id or not inicio_iso:
+        messages.error(request, "Faltan datos para procesar la reserva.")
+        return redirect("rep_buscar_slots")
+
+    docente = get_object_or_404(PerfilDocente, pk=docente_id)
+
+    # Convertir inicio_iso → datetime aware
+    try:
+        ini_naive = datetime.fromisoformat(inicio_iso)
+        inicio = timezone.make_aware(ini_naive, TZ)
+    except Exception:
+        messages.error(request, "Horario inválido.")
+        return redirect("rep_buscar_slots")
+
+    # Form de reserva
+    form = ReservaCitaForm(request.POST or None, representante=request.user)
+
+    # POST → guardar cita
+    if request.method == "POST" and form.is_valid():
+
+        # Extraer datos reales desde la relación
+        relacion = form.cleaned_data["estudiante_rel"]
+        estudiante = relacion.estudiante
+        curso_estudiante = estudiante.curso
+        nombre_estudiante = estudiante.nombre
+
+        try:
+            reservar_cita(
+                docente=docente,
+                representante=request.user,
+                curso_estudiante=curso_estudiante,
+                nombre_estudiante=nombre_estudiante,
+                motivo=form.cleaned_data["motivo"],
+                inicio=inicio,
+            )
+            messages.success(request, "Cita creada correctamente.")
+            return redirect("rep_mis_citas")
+        except Exception as e:
+            messages.error(request, str(e))
+
+    # GET → mostrar formulario final
+    return render(
+        request,
+        "representante/reservar.html",
+        {
+            "docente": docente,
+            "inicio": inicio,
+            "form": form,
+        }
+    )
 
 
 @requiere_rol("Representante")
@@ -293,3 +324,99 @@ def rep_proponer_cita(request):
     except Exception as e:
         messages.error(request, str(e))
         return redirect("rep_buscar")
+
+
+@requiere_rol("Representante")
+def rep_calendario_docente(request, docente_id):
+    docente = get_object_or_404(PerfilDocente, pk=docente_id)
+
+    # Por ahora solo mandamos el docente; luego conectamos slots vía JSON
+    return render(
+        request,
+        "representante/calendario_docente.html",
+        {
+            "docente": docente,
+        },
+    )
+
+
+from datetime import datetime, timedelta, date
+from django.http import JsonResponse
+
+@requiere_rol("Representante")
+def api_slots_docente(request, docente_id):
+    docente = get_object_or_404(PerfilDocente, pk=docente_id)
+
+    start_str = request.GET.get("start")
+    end_str = request.GET.get("end")
+
+    print("RAW start:", start_str)
+    print("RAW end:", end_str)
+
+    if not start_str or not end_str:
+        return JsonResponse([], safe=False)
+
+    try:
+        # Tomar solo YYYY-MM-DD
+        start_date = datetime.strptime(start_str[:10], "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_str[:10], "%Y-%m-%d").date()
+    except Exception as e:
+        print("EXCEPCIÓN:", e)
+        return JsonResponse([], safe=False)
+
+    events = []
+
+    current = start_date
+    while current <= end_date:
+
+        try:
+            slots = generar_slots(docente, current)
+        except Exception as e:
+            print("Error generando slots:", e)
+            slots = []
+
+        if slots:
+            events.append({
+                "title": "Disponible",
+                "start": current.isoformat(),
+                "allDay": True,
+                "color": "#28a745"
+            })
+
+        current += timedelta(days=1)
+
+    return JsonResponse(events, safe=False)
+
+
+@requiere_rol("Representante")
+def rep_slots_dia(request):
+    docente_id = request.GET.get("docente")
+    fecha_str = request.GET.get("fecha")
+
+    if not docente_id or not fecha_str:
+        messages.error(request, "Faltan parámetros para ver los horarios.")
+        return redirect("rep_buscar_slots")
+
+    docente = get_object_or_404(PerfilDocente, pk=docente_id)
+
+    # Convertir fecha
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except Exception:
+        messages.error(request, "Fecha inválida.")
+        return redirect("rep_buscar_slots")
+
+    # Generar slots libres
+    minuto = docente.minutos_por_bloque or 20
+    starts = generar_slots(docente, fecha)
+    slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
+
+    return render(
+        request,
+        "representante/slots_dia.html",
+        {
+            "docente": docente,
+            "fecha": fecha,
+            "slots": slots,
+        },
+    )
