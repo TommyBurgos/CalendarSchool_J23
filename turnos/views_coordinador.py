@@ -71,11 +71,16 @@ def _csv_desde_qs(qs):
 
 @requiere_roles("Administrador", "DocenteAdministrador")
 def resumen_hoy(request):
+    inst = request.user.institucion   # ← INSTITUCIÓN
+
     hoy = timezone.localdate()
-    qs = (Cita.objects
-          .filter(inicio__date=hoy)
-          .select_related("docente__usuario", "representante")
-          .order_by("inicio"))
+    qs = (
+        Cita.objects
+        .filter(inicio__date=hoy, institucion=inst)  # ← FILTRO OBLIGATORIO
+        .select_related("docente__usuario", "representante")
+        .order_by("inicio")
+    )
+
     qs = _aplicar_filtros(request, qs)
 
     if request.GET.get("export") == "1":
@@ -88,14 +93,21 @@ def resumen_hoy(request):
     ctx = {"titulo": "Resumen de Citas — Hoy", "rango": (hoy, hoy), "citas": qs, "totales": totales}
     return render(request, "resumen_coordinador.html", ctx)
 
+
 @requiere_roles("Administrador", "DocenteAdministrador")
 def resumen_semana(request):
+    inst = request.user.institucion  # ← INSTITUCIÓN
+
     base = timezone.localdate()
     di, df = _rango_semana(base)
-    qs = (Cita.objects
-          .filter(inicio__date__range=(di, df))
-          .select_related("docente__usuario", "representante")
-          .order_by("inicio"))
+
+    qs = (
+        Cita.objects
+        .filter(inicio__date__range=(di, df), institucion=inst)  # ← FILTRO
+        .select_related("docente__usuario", "representante")
+        .order_by("inicio")
+    )
+
     qs = _aplicar_filtros(request, qs)
 
     if request.GET.get("export") == "1":

@@ -9,15 +9,15 @@ class UserAdmin(BaseUserAdmin):
     form = UsuarioChangeForm
     model = User
 
-    list_display = ("email", "cedula", "username", "rol", "is_active", "is_staff")
-    list_filter  = ("rol", "is_active", "is_staff", "is_superuser")
-    search_fields = ("email", "cedula", "first_name", "last_name", "username")
+    list_display = ("email", "cedula", "username", "rol", "is_active", "is_staff","institucion")
+    list_filter  = ("rol", "is_active", "is_staff", "is_superuser","institucion")
+    search_fields = ("email", "cedula", "first_name", "last_name", "username","institucion")
     ordering = ("email",)
 
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
-            "fields": ("email", "cedula", "first_name", "last_name", "rol", "is_active", "password1", "password2"),
+            "fields": ("email", "cedula", "first_name", "last_name", "rol", "is_active", "password1", "password2", "institucion"),
         }),
     )
     fieldsets = (

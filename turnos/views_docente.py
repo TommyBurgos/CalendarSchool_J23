@@ -16,14 +16,18 @@ from calendar import monthrange
 @requiere_roles("Docente", "DocenteAdministrador")
 def dashboard_docente(request):
     print("INICIE AL USUARIO DOCENTE.")
+    inst = request.user.institucion
+
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
-        defaults={"minutos_por_bloque": 20, "activo": True},
+        institucion=inst,
+        defaults={"minutos_por_bloque": 20, "activo": True}
     )
+
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")    
     hoy = timezone.localdate()
-    citas_hoy = Cita.objects.filter(docente=docente, inicio__date=hoy).order_by("inicio")
+    citas_hoy = Cita.objects.filter(docente=docente, inicio__date=hoy, institucion=inst).order_by("inicio")
     return render(request, "docente/dashboard.html", {
         "docente": docente,
         "citas_hoy": citas_hoy,
@@ -32,17 +36,19 @@ def dashboard_docente(request):
 # -------- Disponibilidad semanal --------
 @requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_list(request):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    items = DisponibilidadSemanal.objects.filter(docente=docente).order_by("dia_semana","hora_inicio")
+    items = DisponibilidadSemanal.objects.filter(docente=docente, institucion=inst).order_by("dia_semana","hora_inicio")
     return render(request, "docente/disponibilidad_list.html", {"items": items})
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_create(request):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
@@ -54,6 +60,7 @@ def disponibilidad_create(request):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.docente = docente
+            obj.institucion = inst
             try:
                 obj.full_clean()
                 obj.save()
@@ -67,13 +74,15 @@ def disponibilidad_create(request):
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def disponibilidad_delete(request, pk):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    obj = get_object_or_404(DisponibilidadSemanal, pk=pk, docente=docente)
+    obj = get_object_or_404(DisponibilidadSemanal, pk=pk, docente=docente, institucion=inst)
+
     if request.method == "POST":
         obj.delete()
         messages.info(request, "Disponibilidad eliminada.")
@@ -83,17 +92,19 @@ def disponibilidad_delete(request, pk):
 # -------- Excepciones (EXTRA / BLOQUEO) --------
 @requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_list(request):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    items = ExcepcionDisponibilidad.objects.filter(docente=docente).order_by("-fecha","hora_inicio")
+    items = ExcepcionDisponibilidad.objects.filter(docente=docente, institucion=inst).order_by("-fecha","hora_inicio")
     return render(request, "docente/excepciones_list.html", {"items": items})
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_create(request):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
@@ -105,6 +116,7 @@ def excepciones_create(request):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.docente = docente
+            obj.institucion = inst
             try:
                 obj.full_clean()
                 obj.save()
@@ -118,13 +130,14 @@ def excepciones_create(request):
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def excepciones_delete(request, pk):
+    inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    obj = get_object_or_404(ExcepcionDisponibilidad, pk=pk, docente=docente)
+    obj = get_object_or_404(ExcepcionDisponibilidad, pk=pk, docente=docente, institucion=inst)
     if request.method == "POST":
         obj.delete()
         messages.info(request, "Excepción eliminada.")
@@ -134,114 +147,169 @@ def excepciones_delete(request, pk):
 # -------- Agenda --------
 @requiere_roles("Docente", "DocenteAdministrador")
 def agenda_dia(request):
+    inst = request.user.institucion
+
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
+
     fecha_str = request.GET.get("fecha")
     fecha = timezone.localdate() if not fecha_str else datetime.strptime(fecha_str, "%Y-%m-%d").date()
-    starts = generar_slots(docente, fecha)  # datetimes aware de inicio
-    citas = Cita.objects.filter(docente=docente, inicio__date=fecha).order_by("inicio")
-    # armar pares (inicio, fin) usando minutos_del_docente
+
+    starts = generar_slots(docente, fecha)
+
+    citas = Cita.objects.filter(
+        docente=docente,
+        institucion=inst,
+        inicio__date=fecha
+    ).order_by("inicio")
+
     minuto = docente.minutos_por_bloque or 20
     slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
+
     return render(request, "docente/agenda_dia.html", {
-        "fecha": fecha, "slots": slots, "citas": citas
+        "fecha": fecha,
+        "slots": slots,
+        "citas": citas
     })
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def agenda_semana(request):
+    inst = request.user.institucion
+
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
+
     base = timezone.localdate()
     di = base - timezone.timedelta(days=base.weekday())
     dias = [di + timezone.timedelta(days=i) for i in range(7)]
+
     minuto = docente.minutos_por_bloque or 20
     data = []
+
     for d in dias:
         starts = generar_slots(docente, d)
         slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
-        citas = Cita.objects.filter(docente=docente, inicio__date=d).order_by("inicio")
+
+        citas = Cita.objects.filter(
+            docente=docente,
+            institucion=inst,
+            inicio__date=d
+        ).order_by("inicio")
+
         data.append((d, slots, citas))
+
     return render(request, "docente/agenda_semana.html", {"data": data, "di": di})
 
 # turnos/views_docente.py (añade)
 from django.views.decorators.http import require_POST
 from .models import EstadoCita
-
 @requiere_roles("Docente", "DocenteAdministrador")
 @require_POST
 def cita_confirmar(request, pk):
+    inst = request.user.institucion
+
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    c = get_object_or_404(Cita, pk=pk, docente=docente)
+
+    c = get_object_or_404(Cita, pk=pk, docente=docente, institucion=inst)
+
     c.estado = EstadoCita.CONFIRMADA
-    c.full_clean(); c.save()
+    c.full_clean()
+    c.save()
+
     messages.success(request, "Cita confirmada.")
     return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
 
+
 @requiere_roles("Docente", "DocenteAdministrador")
 def cita_cancelar(request, pk):
+    inst = request.user.institucion
+
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
-    c = get_object_or_404(Cita, pk=pk, docente=docente)
+
+    c = get_object_or_404(Cita, pk=pk, docente=docente, institucion=inst)
+
     if request.method == "POST":
         motivo = (request.POST.get("motivo") or "").strip()
         c.estado = EstadoCita.CANCELADA
         c.cancelada_por = request.user
         c.motivo_cancelacion = motivo[:255]
-        c.full_clean(); c.save()
+        c.full_clean()
+        c.save()
+
         messages.info(request, "Cita cancelada.")
         return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
+
     return render(request, "turnos/docente/cita_cancelar_confirm.html", {"cita": c})
+
 
 @requiere_roles("Docente", "DocenteAdministrador")
 def calendario_mes(request):
+    inst = request.user.institucion
+
     docente, _ = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
 
-    # Mes actual o mes enviado por GET
     hoy = timezone.localdate()
     y = int(request.GET.get("y", hoy.year))
     m = int(request.GET.get("m", hoy.month))
 
-    # Rango del mes
     _, dias_en_mes = monthrange(y, m)
     dias = [date(y, m, d) for d in range(1, dias_en_mes + 1)]
 
-    # Consultas para marcar el calendario
-    citas = Cita.objects.filter(docente=docente, inicio__year=y, inicio__month=m)
+    # ---- Citas del mes SOLO de esta institución ----
+    citas = Cita.objects.filter(
+        docente=docente,
+        institucion=inst,
+        inicio__year=y,
+        inicio__month=m
+    )
 
     dias_con_citas = {c.inicio.date() for c in citas}
 
-    # Disponibilidad semanal (lunes=0)
+    # ---- Disponibilidad semanal ----
     disp_por_dia = {
-        d.dia_semana for d in DisponibilidadSemanal.objects.filter(docente=docente)
+        d.dia_semana
+        for d in DisponibilidadSemanal.objects.filter(docente=docente, institucion=inst)
     }
 
-    # Excepciones (bloqueos)
-    bloqueos = ExcepcionDisponibilidad.objects.filter(docente=docente, fecha__year=y, fecha__month=m)
+    # ---- Bloqueos ----
+    bloqueos = ExcepcionDisponibilidad.objects.filter(
+        docente=docente,
+        institucion=inst,
+        fecha__year=y,
+        fecha__month=m
+    )
     dias_bloqueados = {b.fecha for b in bloqueos}
 
     calendario = []
     for d in dias:
         estado = "sin_disp"
+
         if d in dias_bloqueados:
             estado = "bloqueado"
         elif d.weekday() in disp_por_dia:
@@ -251,7 +319,6 @@ def calendario_mes(request):
 
         calendario.append((d, estado))
 
-    # Navegación
     mes_ant = (date(y, m, 1) - timedelta(days=1))
     mes_sig = (date(y, m, dias_en_mes) + timedelta(days=1))
 

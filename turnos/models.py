@@ -34,6 +34,7 @@ class PerfilDocente(models.Model):
     departamento = models.CharField(max_length=120, blank=True)
     telefono = models.CharField(max_length=30, blank=True)
     activo = models.BooleanField(default=True)
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         verbose_name = "Perfil de Docente"
@@ -61,6 +62,8 @@ class DocenteCursoMateria(models.Model):
     materia = models.ForeignKey("turnos.Materia", on_delete=models.CASCADE)
 
     cursos = models.ManyToManyField("turnos.Curso", related_name="asignaciones")
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
+
 
     def __str__(self):
         cursos_str = ", ".join(c.nombre for c in self.cursos.all())
@@ -74,7 +77,14 @@ class PerfilRepresentante(models.Model):
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="perfil_representante"
     )
-    telefono = models.CharField(max_length=30, blank=True)
+    telefono = models.CharField(max_length=30, blank=True) 
+    institucion = models.ForeignKey(
+        "user.Institucion",
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="representantes"
+    )   
+
 
     class Meta:
         verbose_name = "Perfil de Representante"
@@ -112,6 +122,8 @@ class Cita(models.Model):
 
     inicio = models.DateTimeField()
     fin = models.DateTimeField()
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
+
 
     estado = models.CharField(
         max_length=12, choices=EstadoCita.choices, default=EstadoCita.PENDIENTE
@@ -220,6 +232,8 @@ class DisponibilidadSemanal(models.Model):
     dia_semana = models.IntegerField(choices=[(i, n) for i, n in enumerate(["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"])])
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
+
 
     class Meta:
         verbose_name = "Disponibilidad semanal"
@@ -245,6 +259,7 @@ class ExcepcionDisponibilidad(models.Model):
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
     tipo = models.CharField(max_length=10, choices=TipoExcepcion.choices, default=TipoExcepcion.BLOQUEO)
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
     motivo = models.CharField(max_length=200, blank=True)
 
     class Meta:
@@ -266,6 +281,7 @@ from django.core.validators import RegexValidator
 
 class Estudiante(models.Model):
     nombre = models.CharField(max_length=120)
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
     cedula = models.CharField(
         max_length=20,
         unique=True,
@@ -305,6 +321,8 @@ class RelacionRepresentacion(models.Model):
     fuente = models.CharField(max_length=10, choices=FuenteRelacion.choices, default=FuenteRelacion.MANUAL)
     activo = models.BooleanField(default=True)
     creada_en = models.DateTimeField(auto_now_add=True)
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
+
 
     class Meta:
         verbose_name = "Relación Representación"
@@ -334,6 +352,7 @@ class FeriadoInstitucional(models.Model):
     hora_inicio = models.TimeField(null=True, blank=True)  # si null => día completo
     hora_fin = models.TimeField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
+    institucion = models.ForeignKey("user.Institucion", on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         verbose_name = "Feriado/Evento institucional"
@@ -344,3 +363,4 @@ class FeriadoInstitucional(models.Model):
         if self.hora_inicio and self.hora_fin:
             return f"{self.nombre} ({self.fecha_inicio}–{self.fecha_fin} {self.hora_inicio}-{self.hora_fin})"
         return f"{self.nombre} ({self.fecha_inicio}–{self.fecha_fin} - día completo)"
+

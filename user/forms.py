@@ -90,7 +90,7 @@ class UsuarioCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ("email", "cedula", "first_name", "last_name", "rol", "is_active")
+        fields = ("email", "cedula", "first_name", "last_name", "rol", "is_active", "institucion")
 
     def clean(self):
         cleaned = super().clean()

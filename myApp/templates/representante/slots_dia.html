@@ -4,20 +4,23 @@
 <div class="container py-4">
 
   <h4>Horarios disponibles</h4>
+  <div class="badge text-bg-info p-3y text-wrap">
+        Ten en cuenta que se muestran solo los horarios disponibles en el día.
+    </div>
 
   <p class="text-muted">
-    Docente: <strong>{{ docente.usuario.get_full_name|default:docente.usuario.username }}</strong><br>
+    Docente:
+    <strong>{{ docente.usuario.get_full_name|default:docente.usuario.username }}</strong><br>
     Fecha: <strong>{{ fecha }}</strong>
   </p>
 
-  <div class="card">
+  <div class="card mb-4">
     <ul class="list-group list-group-flush">
       {% for ini, fin in slots %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
         <span>
           <strong>{{ ini|date:'H:i' }}</strong> – {{ fin|date:'H:i' }}
         </span>
-
         <a href="{% url 'rep_reservar' %}?docente_id={{ docente.id }}&inicio_iso={{ ini|date:'Y-m-d\\TH:i:s' }}"
            class="btn btn-success btn-sm">
           Reservar
@@ -27,6 +30,48 @@
       <li class="list-group-item">No hay disponibilidad este día.</li>
       {% endfor %}
     </ul>
+  </div>
+
+  <!-- Proponer horario alternativo -->
+  <div class="card">
+    <div class="card-header">
+      ¿No encuentras un horario que te sirva? Proponer un horario al docente
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'rep_proponer' %}" class="row g-3">
+        {% csrf_token %}
+        <input type="hidden" name="docente_id" value="{{ docente.id }}">
+        <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+
+        <div class="col-md-4">
+          <label class="form-label">Estudiante</label>
+          <select name="estudiante_rel" class="form-select" required>
+            <option value="">Seleccione…</option>
+            {% for rel in relaciones %}
+              <option value="{{ rel.id }}">
+                {{ rel.estudiante.nombre }} ({{ rel.estudiante.curso }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Hora propuesta</label>
+          <input type="time" name="hora" class="form-control" required>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label">Motivo</label>
+          <input type="text" name="motivo" class="form-control" required>
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-warning">
+            Proponer horario
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <a href="javascript:history.back()" class="btn btn-secondary mt-3">Volver</a>
