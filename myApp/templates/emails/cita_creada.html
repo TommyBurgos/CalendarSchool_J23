@@ -1,9 +1,61 @@
-<p>Hola {{ nombre_receptor }},</p>
-<p>Se registró una nueva cita:</p>
-<ul>
-  <li>Docente: {{ docente }}</li>
-  <li>Representante: {{ representante }}</li>
-  <li>Fecha y hora: {{ inicio|date:"Y-m-d H:i" }}</li>
-  <li>Motivo: {{ motivo }}</li>
-</ul>
-<p>Estado: <strong>{{ estado }}</strong></p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nueva cita registrada</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; background-color:#f4f6f8; padding:20px;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background:#ffffff; border-radius:10px; padding:25px;">
+    <tr>
+      <td>
+
+        <h2 style="color:#2F9299; text-align:center; margin-top:0;">
+          📅 Nueva cita registrada
+        </h2>
+
+        <p style="font-size:15px; color:#333;">
+          Hola <strong>{{ nombre_receptor }}</strong>,
+        </p>
+
+        <p style="font-size:15px; color:#333;">
+          Se ha registrado una nueva cita con la siguiente información:
+        </p>
+
+        <table style="width:100%; margin-top:10px; font-size:15px;">
+          <tr>
+            <td><strong>Docente:</strong></td>
+            <td>{{ docente }}</td>
+          </tr>
+          <tr>
+            <td><strong>Representante:</strong></td>
+            <td>{{ representante }}</td>
+          </tr>
+          <tr>
+            <td><strong>Fecha y hora:</strong></td>
+            <td>{{ inicio|date:"d-m-Y H:i" }}</td>
+          </tr>
+          <tr>
+            <td><strong>Motivo:</strong></td>
+            <td>{{ motivo }}</td>
+          </tr>
+          <tr>
+            <td><strong>Estado:</strong></td>
+            <td><strong>{{ estado }}</strong></td>
+          </tr>
+        </table>
+
+        <p style="margin-top:25px; font-size:14px; color:#666;">
+          Si tienes preguntas, por favor contáctanos.
+        </p>
+
+      </td>
+    </tr>
+  </table>
+
+  <p style="text-align:center; margin-top:15px; font-size:12px; color:#999;">
+    EasyDate • Sistema de Gestión de Citas Escolares
+  </p>
+
+</body>
+</html>
