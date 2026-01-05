@@ -13,7 +13,6 @@ from user.decorators import requiere_rol
 from turnos.models import (
     PerfilDocente, PerfilRepresentante, Cita, EstadoCita, ExcepcionDisponibilidad, TipoExcepcion, Cita, EstadoCita
 )
-from turnos.forms import FiltroCitasForm
 
 import csv
 from django.http import HttpResponse

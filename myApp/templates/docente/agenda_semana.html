@@ -44,7 +44,19 @@
                             <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
                           {% endif %}
                         </div>
+                        <a href="{% url 'comentar_cita' c.id %}"
+                          class="btn btn-sm btn-outline-secondary">
+                            📝 Comentario
+                        </a>
+                        {% if c.comentario_docente %}
+                            <div class="small text-muted">
+                                📝 {{ c.comentario_docente|truncatechars:80 }}
+                            </div>
+                        {% endif %}
+
+
                       </div>
+
                     </li>
                   {% empty %}
                     <li>—</li>

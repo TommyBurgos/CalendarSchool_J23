@@ -41,10 +41,20 @@
                     <a href="{% url 'cita_cancelar' c.pk %}" class="btn btn-sm btn-outline-danger ms-2">Cancelar</a>
                     {% elif c.estado == "CANCELADA" %}
                     <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
-                    {% endif %}
+                    {% endif %}                    
+                </div>                
                 </div>
+                <a href="{% url 'comentar_cita' c.id %}" class="btn btn-sm btn-outline-secondary">
+                        📝 Comentario
+                </a>
+                {% if c.comentario_docente %}
+                <div class="mt-1 small text-muted">
+                    <strong>Comentario:</strong> {{ c.comentario_docente|linebreaksbr }}
                 </div>
+            {% endif %}
             </li>
+            
+
             {% empty %}
             <li class="list-group-item">Sin citas.</li>
             {% endfor %}

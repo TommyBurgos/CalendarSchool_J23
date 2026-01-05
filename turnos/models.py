@@ -139,6 +139,9 @@ class Cita(models.Model):
         related_name="citas_canceladas",
     )
     motivo_cancelacion = models.CharField(max_length=255, blank=True)
+    comentario_docente = models.TextField( blank=True,
+    help_text="Observaciones internas del docente/administración (no visible para representantes).")
+
     estudiante = models.ForeignKey(
         'turnos.Estudiante',
         null=True, blank=True,
@@ -225,6 +228,37 @@ class Cita(models.Model):
     def puede_cancelar(self):
         ahora = timezone.now()
         return self.inicio - ahora >= timedelta(hours=24)
+
+
+from django.conf import settings
+
+
+class ComentarioCita(models.Model):
+    """
+    Historial de comentarios internos sobre una cita.
+    Visible solo para Docente / DocenteAdministrador / Administrador.
+    """
+    cita = models.ForeignKey(
+        "turnos.Cita",
+        on_delete=models.CASCADE,
+        related_name="comentarios"
+    )
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="comentarios_citas"
+    )
+    texto = models.TextField()
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Comentario de cita"
+        verbose_name_plural = "Comentarios de citas"
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"Comentario #{self.id} - {self.cita_id}"
+
 
 
 class DisponibilidadSemanal(models.Model):

@@ -1,5 +1,6 @@
 from django import forms
-from .models import PerfilDocente, EstadoCita, PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Materia
+from .models import PerfilDocente, EstadoCita, PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Materia, Cita
+
 
 class FiltroCitasForm(forms.Form):
     fecha = forms.DateField(
@@ -87,3 +88,39 @@ class BloqueoMasivoForm(forms.Form):
 
 
 
+class ComentarioCitaForm(forms.ModelForm):
+    class Meta:
+        model = Cita
+        fields = ["comentario_docente"]
+        widgets = {
+            "comentario_docente": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Escribe aquí un comentario interno sobre la cita (solo visible para docentes y administración)...",
+                }
+            )
+        }
+        labels = {
+            "comentario_docente": "Comentario interno",
+        }
+
+from .models import ComentarioCita
+
+
+class NuevoComentarioCitaForm(forms.ModelForm):
+    class Meta:
+        model = ComentarioCita
+        fields = ["texto"]
+        widgets = {
+            "texto": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Agregar un nuevo comentario sobre esta cita...",
+                }
+            )
+        }
+        labels = {
+            "texto": "Nuevo comentario",
+        }

@@ -1,0 +1,88 @@
+{% extends "docente/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h4 class="mb-3">Comentarios de la cita</h4>
+
+    <!-- Información de la cita -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="mb-1"><strong>Docente:</strong> {{ cita.docente.usuario.get_full_name }}</p>
+            <p class="mb-1"><strong>Representante:</strong> {{ cita.representante.get_full_name }}</p>
+            <p class="mb-1"><strong>Estudiante:</strong> {{ cita.nombre_estudiante }} ({{ cita.curso_estudiante }})</p>
+            <p class="mb-1"><strong>Fecha:</strong> {{ cita.inicio|date:"d/m/Y H:i" }}</p>
+            <p class="mb-0"><strong>Estado:</strong> {{ cita.get_estado_display }}</p>
+        </div>
+    </div>
+
+    <!-- Historial -->
+    <h6 class="mb-3">Historial de comentarios</h6>
+
+    {% if comentarios %}
+        {% for c in comentarios %}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ c.autor.get_full_name|default:c.autor.username }}</strong>
+                        <small class="text-muted">
+                            {{ c.creado_en|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    <div class="mt-2">
+                        {{ c.texto|linebreaksbr }}
+                    </div>
+                    {% if c.autor == request.user or request.user.rol.nombre == "Administrador" %}
+                    <div class="mt-2">
+                        <a href="{% url 'editar_comentario_cita' c.id %}"
+                        class="btn btn-sm btn-outline-primary">
+                            ✏️ Editar
+                        </a>
+                        {% if request.user.rol.nombre == "Administrador" or request.user.rol.nombre == "DocenteAdministrador"%}
+                        <a href="{% url 'eliminar_comentario_cita' c.id %}"
+                        class="btn btn-sm btn-outline-danger ms-2">
+                            🗑️ Eliminar
+                        </a>
+                    {% endif %}
+                    </div>
+
+                {% endif %}
+
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Aún no hay comentarios para esta cita.</p>
+    {% endif %}
+
+    <!-- Formulario nuevo comentario -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="mb-3">Agregar nuevo comentario</h6>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    {{ form.texto.label_tag }}
+                    {{ form.texto }}
+                    {% if form.texto.errors %}
+                        <div class="text-danger small">
+                            {{ form.texto.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Guardar comentario
+                </button>
+                <a href="javascript:history.back()" class="btn btn-secondary ms-2">
+                    Volver
+                </a>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

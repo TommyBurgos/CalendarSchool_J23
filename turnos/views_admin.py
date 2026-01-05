@@ -9,11 +9,14 @@ from django.http import HttpResponse
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, TipoExcepcion, FeriadoInstitucional, Cita
+from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, TipoExcepcion, FeriadoInstitucional, Cita, ComentarioCita
 from .forms import PerfilDocenteForm, DisponibilidadSemanalForm, ExcepcionDisponibilidadForm, BloqueoMasivoForm
 
 from turnos.forms import CargaCSVDocentesForm
 from django.views.decorators.http import require_POST
+
+from openpyxl import Workbook
+from django.utils.timezone import localtime
 
 from datetime import timedelta, datetime
 from django.db import transaction
@@ -569,3 +572,187 @@ def cita_rechazar(request, pk):
 
     messages.success(request, "Cita rechazada.")
     return redirect("admin_buscar_citas")
+
+
+import os
+from openpyxl.drawing.image import Image as XLImage
+from django.conf import settings
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, PatternFill, Alignment
+
+from turnos.forms import FiltroCitasForm
+
+@requiere_roles("Administrador", "DocenteAdministrador")
+def exportar_citas_excel(request):
+    inst = request.user.institucion
+    hoy = timezone.localdate()
+    form = FiltroCitasForm(request.GET or None)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Citas y Comentarios"
+    fila_encabezados = 10
+
+    # =========================
+    # LOGOS
+    # =========================
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD",  # azul sobrio (puedes cambiar)
+        end_color="4F81BD",
+        fill_type="solid"
+    )
+    header_alignment = Alignment(
+        horizontal="center",
+        vertical="center",
+        wrap_text=True
+    )
+
+
+    # Logo institución (si existe)
+    ws.merge_cells("A1:B6")
+    if inst.logo and os.path.exists(inst.logo.path):
+        logo_inst = XLImage(inst.logo.path)
+        logo_inst.width = 110
+        logo_inst.height = 110
+        ws.add_image(logo_inst, "A1")  # anclado a la esquina superior izquierda    # Logo EasyDate (static) En producción
+    #logo_easydate_path = os.path.join(
+     #   settings.BASE_DIR,"static", "images","img","LogoEasyDateTr.png")
+    
+    #LOGO PARA PROBAR EN LOCAL
+    logo_easydate_path = os.path.join(
+        settings.BASE_DIR,"myApp","static", "assets","images","img","LogoEasyDateTr.png")
+    
+    print(logo_easydate_path)
+    # Logo EasyDate
+    ws.merge_cells("E1:F6")
+    if os.path.exists(logo_easydate_path):
+        logo_easy = XLImage(logo_easydate_path)
+        logo_easy.width = 110
+        logo_easy.height = 110
+        ws.add_image(logo_easy, "E1")
+
+    # =========================
+    # TÍTULO
+    # =========================
+    ws.merge_cells("B8:H8")
+    ws["B8"] = f"Reporte de Citas - {inst.nombre}"
+    ws["B8"].style = "Title"
+
+
+    # =========================
+    # ENCABEZADOS
+    # =========================
+    headers = [
+        "ID Cita",
+        "Fecha",
+        "Hora inicio",
+        "Hora Fin",
+        "Docente",
+        "Representante",
+        "Email del representante",
+        "Estudiante",
+        "Curso",
+        "Estado",
+        "Motivo",
+        "Autor comentario",
+        "Fecha comentario",
+        "Comentario",
+    ]
+    ws.append([])
+    ws.append(headers)
+    fila_encabezados = ws.max_row
+
+    for col in range(1, len(headers) + 1):
+        cell = ws.cell(row=fila_encabezados, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    ws.freeze_panes = f"A{fila_encabezados + 1}"
+
+    # =========================
+    # DATOS
+    # =========================
+    citas = (
+        Cita.objects
+        .filter(institucion=inst)
+        .select_related("docente__usuario", "representante")
+        .prefetch_related("comentarios__autor")
+        .order_by("inicio")
+    )
+
+    if form.is_valid():
+        fecha = form.cleaned_data.get("fecha")
+        docente = form.cleaned_data.get("docente")
+        estado = form.cleaned_data.get("estado")
+        if fecha:
+            citas = citas.filter(inicio__date=fecha)
+        else:
+            desde, hasta = hoy, hoy + timezone.timedelta(days=7)
+            citas = citas.filter(inicio__date__range=(desde, hasta))
+        if docente:
+            citas = citas.filter(docente=docente)
+        if estado:
+            citas = citas.filter(estado=estado)    
+
+    for cita in citas:
+        comentarios = cita.comentarios.all()
+        ini = localtime(cita.inicio).replace(tzinfo=None)
+        fin = localtime(cita.fin).replace(tzinfo=None)
+
+        if not comentarios:
+            ws.append([
+                cita.id,
+                ini.date(),
+                ini.time(),
+                fin.time(),
+                cita.docente.usuario.get_full_name(),
+                cita.representante.get_full_name(),
+                cita.representante.email,
+                cita.nombre_estudiante,
+                cita.curso_estudiante,
+                cita.get_estado_display(),
+                (cita.motivo or "")[:150],
+                "",
+                "",
+                "",
+            ])
+            continue
+
+        for com in comentarios:
+            ws.append([
+                cita.id,
+                ini.date(),
+                ini.time(),
+                fin.time(),
+                cita.docente.usuario.get_full_name(),
+                cita.representante.get_full_name(),
+                cita.representante.email,
+                cita.nombre_estudiante,
+                cita.curso_estudiante,
+                cita.get_estado_display(),                
+                (cita.motivo or "")[:150],
+                com.autor.get_full_name() or com.autor.username,
+                localtime(com.creado_en).replace(tzinfo=None),
+                com.texto,
+            ])
+
+    # =========================
+    # RESPUESTA
+    # =========================
+
+    ultima_fila = ws.max_row
+    ultima_col = ws.max_column
+    
+    col_final = get_column_letter(ultima_col)
+
+    ws.auto_filter.ref = f"A{fila_encabezados}:{col_final}{ultima_fila}"
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="reporte_citas_easydate.xlsx"'
+    wb.save(response)
+    return response

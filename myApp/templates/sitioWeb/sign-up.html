@@ -73,7 +73,7 @@
 	</script>
 
 	<!-- Favicon -->
-	<link rel="shortcut icon" href="{% static 'assets/images/img/iconoCS.png' %}">
+	<link rel="shortcut icon" href="{% static 'assets/images/img/logoEasyDateTr.png' %}">
 
 	<!-- Google Font -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,6 +86,53 @@
 
 	<!-- Theme CSS -->
 	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}">
+	<style>
+	.bg-easydate {
+		background-color: #2f9299 !important;
+		color: white !important;
+		padding: 2rem;
+	}
+
+	.bg-easydate h2,
+	.bg-easydate p,
+	.bg-easydate label,
+	.bg-easydate span,
+	.bg-easydate .form-check-label,
+	.bg-easydate a {
+		color: white !important;
+	}
+
+	/* Inputs */
+	.bg-easydate .form-control {
+		background-color: rgba(255, 255, 255, 0.15) !important;
+		border: 1px solid rgba(255, 255, 255, 0.25) !important;
+		color: #fff !important;
+	}
+
+	.bg-easydate .form-control::placeholder {
+		color: rgba(255, 255, 255, 0.7) !important;
+	}
+
+	.bg-easydate .input-group-text {
+		background-color: rgba(0, 0, 0, 0.25) !important;
+		border: none !important;
+		color: white !important;
+	}
+
+	.bg-easydate .form-check-input {
+		border-color: white !important;
+		background-color: transparent !important;
+	}
+
+	.bg-easydate .form-check-input:checked {
+		background-color: white !important;
+	}
+
+	.bg-easydate a:hover {
+		text-decoration: underline;
+	}
+</style>
+
 
 </head>
 
@@ -110,7 +157,7 @@
 							<p class="mb-0 h6 fw-light">Y respalda tus citas con los docentes!</p>
 						</div>
 						<!-- SVG Image -->
-						<img src="{% static 'assets/images/img/logoClaro.png' %}" class="mt-5" alt="">
+						<img src="{% static 'assets/images/img/logoEasyDateTr.png' %}" class="mt-5" alt="">
 						<!-- Info 
 						<div class="d-sm-flex mt-5 align-items-center justify-content-center">
 							<ul class="avatar-group mb-2 mb-sm-0">
@@ -126,91 +173,68 @@
 				</div>
 
 				<!-- Right -->
-				<div class="col-12 col-lg-6 m-auto bg-warning bg-opacity-10">
-					<div class="row my-5">
-						<div class="col-sm-10 col-xl-8 m-auto">
-							<!-- Title -->
-							<img src="assets/images/element/03.svg" class="h-40px mb-2" alt="">
-							<h2>Registra una cuenta!</h2>
-							<p class="lead mb-4">Que gusto verte. Crea una cuenta ahora.</p>
-							
-							<!-- Form START -->
-							<form method="post" novalidate>
-							{% csrf_token %}
+				<div class="col-12 col-lg-6 m-auto bg-easydate">
+	<div class="row my-5">
+		<div class="col-sm-10 col-xl-8 m-auto">
 
-							<!-- Email -->
-							<div class="mb-4">
-								<label for="id_email" class="form-label">Cedula de identidad *</label>
-								<div class="input-group input-group-lg">
-								<span class="input-group-text rounded-start border-0 px-3 text-white bg-secondary">
-									<i class="bi bi-envelope-fill"></i>
-								</span>
-								{{ form.email|add_class:"form-control border-0 bg-secondary bg-opacity-10 rounded-end ps-1" }}
-								</div>
-							</div>
+			<img src="assets/images/element/03.svg" class="h-40px mb-2" alt="">
+			<h2>Registra una cuenta!</h2>
+			<p class="lead mb-4">Qué gusto verte. Crea una cuenta ahora.</p>
 
-							<!-- Password -->
-							<div class="mb-4">
-								<label for="id_password1" class="form-label">Password *</label>
-								<div class="input-group input-group-lg">
-								<span class="input-group-text rounded-start border-0 px-3 text-white bg-secondary">
-									<i class="fas fa-lock"></i>
-								</span>
-								{{ form.password1|add_class:"form-control border-0 bg-secondary bg-opacity-10 rounded-end ps-1" }}
-								</div>
-							</div>
+			<form method="post" novalidate>
+				{% csrf_token %}
 
-							<!-- Confirm Password -->
-							<div class="mb-4">
-								<label for="id_password2" class="form-label">Confirmar contraseña *</label>
-								<div class="input-group input-group-lg">
-								<span class="input-group-text rounded-start border-0 px-3 text-white bg-secondary">
-									<i class="fas fa-lock"></i>
-								</span>
-								{{ form.password2|add_class:"form-control border-0 rounded-end ps-1 bg-secondary bg-opacity-10" }}
-								</div>
-							</div>
-
-							<!-- Check box -->
-							<div class="mb-4">
-								<div class="form-check">
-								<input type="checkbox" class="form-check-input" id="checkbox-1" required>
-								<label class="form-check-label" for="checkbox-1">
-									Al registrarte, aceptas los <a href="#">términos del servicio</a>.
-								</label>
-								</div>
-							</div>
-
-							<!-- Button -->
-							<div class="align-items-center mt-0">
-								<div class="d-grid">
-								<button class="btn btn-primary mb-0" type="submit">Registrarme</button>
-								</div>
-							</div>
-							</form>
-
-							<!-- Form END -->
-
-							<!-- Social buttons 
-							<div class="row">-->
-								<!-- Divider with text 
-								<div class="position-relative my-4">
-									<hr>
-									<p class="small position-absolute top-50 start-50 translate-middle bg-body px-5">Or</p>
-								</div>-->
-								<!-- Social btn 
-								<div class="col-xxl-6 d-grid">
-									<a href="#" class="btn bg-google mb-2 mb-xxl-0"><i class="fab fa-fw fa-google text-white me-2"></i>Registrate con Google</a>
-								</div>			-->					
-							<!--</div>-->
-
-							<!-- Sign up link -->
-							<div class="mt-4 text-center">
-								<span>Ya tienes una cuenta?<a href="/usuarios/login"> Inicia sesión aquí</a></span>
-							</div>
-						</div>
+				<!-- Email -->
+				<div class="mb-4">
+					<label for="id_email" class="form-label">Cédula *</label>
+					<div class="input-group input-group-lg">
+						<span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+						{{ form.email|add_class:"form-control" }}
 					</div>
 				</div>
+
+				<!-- Password -->
+				<div class="mb-4">
+					<label for="id_password1" class="form-label">Password *</label>
+					<div class="input-group input-group-lg">
+						<span class="input-group-text"><i class="fas fa-lock"></i></span>
+						{{ form.password1|add_class:"form-control" }}
+					</div>
+				</div>
+
+				<!-- Confirm Password -->
+				<div class="mb-4">
+					<label for="id_password2" class="form-label">Confirmar contraseña *</label>
+					<div class="input-group input-group-lg">
+						<span class="input-group-text"><i class="fas fa-lock"></i></span>
+						{{ form.password2|add_class:"form-control" }}
+					</div>
+				</div>
+
+				<!-- Check -->
+				<div class="mb-4">
+					<div class="form-check">
+						<input type="checkbox" class="form-check-input" id="checkbox-1" required>
+						<label class="form-check-label" for="checkbox-1">
+							Al registrarte, aceptas los <a href="#">términos del servicio</a>.
+						</label>
+					</div>
+				</div>
+
+				<!-- Button -->
+				<div class="d-grid">
+					<button class="btn btn-light" type="submit">Registrarme</button>
+				</div>
+			</form>
+
+			<div class="mt-4 text-center">
+				<span>¿Ya tienes una cuenta? <a href="/usuarios/login">Inicia sesión aquí</a></span>
+			</div>
+
+		</div>
+	</div>
+</div>
+
 			</div>
 		</div>
 	</section>

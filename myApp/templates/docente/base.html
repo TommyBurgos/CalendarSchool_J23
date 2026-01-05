@@ -7,7 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     >
-    <title>{% block title %}Panel Docente · CalendarSchool{% endblock %}</title>
+    <title>{% block title %}Panel Docente · Easy Date{% endblock %}</title>
 
     <!-- Bootstrap 5 CSS -->
     <link
@@ -33,7 +33,7 @@
       <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard_docente' %}">
           <img src="{% static 'logo.png' %}" alt="" width="28" height="28" onerror="this.style.display='none'">
-          <strong>CalendarSchool</strong> <span class="opacity-75">Docente</span>
+          <strong>Easy Date</strong> <span class="opacity-75">Docente</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
@@ -147,7 +147,7 @@
     <!-- Footer -->
     <footer class="py-3 border-top bg-white">
       <div class="container d-flex justify-content-between small">
-        <span>© {{ now|date:"Y" }} CalendarSchool</span>
+        <span>© {{ now|date:"Y" }} Easy Date</span>
         <span class="text-muted">Zona horaria: America/Guayaquil</span>
       </div>
     </footer>

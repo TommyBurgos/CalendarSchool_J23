@@ -5,8 +5,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from user.decorators import requiere_rol
-from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Cita
-from .forms import DisponibilidadSemanalForm, ExcepcionDisponibilidadForm
+from .models import PerfilDocente, DisponibilidadSemanal, ExcepcionDisponibilidad, Cita, ComentarioCita
+from .forms import DisponibilidadSemanalForm, ExcepcionDisponibilidadForm, ComentarioCitaForm, NuevoComentarioCitaForm
+from django.core.exceptions import PermissionDenied
+
 from .services import generar_slots
 from user.decorators import requiere_roles
 
@@ -328,3 +330,96 @@ def calendario_mes(request):
         "mes_ant": mes_ant,
         "mes_sig": mes_sig,
     })
+
+@requiere_roles("Docente", "DocenteAdministrador", "Administrador")
+def comentar_cita(request, cita_id):
+    inst = request.user.institucion
+
+    cita = get_object_or_404(
+        Cita,
+        pk=cita_id,
+        institucion=inst
+    )
+
+    # Formulario para NUEVO comentario
+    form = NuevoComentarioCitaForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        comentario = form.save(commit=False)
+        comentario.cita = cita
+        comentario.autor = request.user
+        comentario.save()
+
+        messages.success(request, "Comentario agregado al historial.")
+        return redirect("comentar_cita", cita_id=cita.id)
+
+    # Historial de comentarios
+    comentarios = cita.comentarios.select_related("autor").order_by("creado_en")
+
+    return render(
+        request,
+        "docente/comentar_cita.html",
+        {
+            "cita": cita,
+            "form": form,
+            "comentarios": comentarios,
+        }
+    )
+
+
+@requiere_roles("Docente", "DocenteAdministrador", "Administrador")
+def editar_comentario_cita(request, comentario_id):
+    inst = request.user.institucion
+
+    comentario = get_object_or_404(
+        ComentarioCita,
+        pk=comentario_id,
+        cita__institucion=inst
+    )
+
+    # Permisos:
+    # - Admin puede editar cualquiera
+    # - Otros solo sus propios comentarios
+    if request.user.rol.nombre != "Administrador" and comentario.autor != request.user:
+        raise PermissionDenied("No puedes editar este comentario.")
+
+    form = NuevoComentarioCitaForm(request.POST or None, instance=comentario)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Comentario actualizado.")
+        return redirect("comentar_cita", cita_id=comentario.cita.id)
+
+    return render(
+        request,
+        "docente/editar_comentario.html",
+        {
+            "comentario": comentario,
+            "form": form,
+        }
+    )
+
+
+@requiere_roles("DocenteAdministrador", "Administrador")
+def eliminar_comentario_cita(request, comentario_id):
+    inst = request.user.institucion
+
+    comentario = get_object_or_404(
+        ComentarioCita,
+        pk=comentario_id,
+        cita__institucion=inst
+    )
+
+    if request.method == "POST":
+        cita_id = comentario.cita.id
+        comentario.delete()
+        messages.success(request, "Comentario eliminado.")
+        return redirect("comentar_cita", cita_id=cita_id)
+
+    return render(
+        request,
+        "docente/eliminar_comentario.html",
+        {
+            "comentario": comentario,
+        }
+    )

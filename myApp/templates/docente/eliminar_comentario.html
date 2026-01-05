@@ -1,0 +1,25 @@
+{% extends "docente/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h5 class="text-danger">Eliminar comentario</h5>
+
+    <div class="alert alert-warning mt-3">
+        <p><strong>Autor:</strong> {{ comentario.autor.get_full_name|default:comentario.autor.username }}</p>
+        <p><strong>Fecha:</strong> {{ comentario.creado_en|date:"d/m/Y H:i" }}</p>
+        <hr>
+        <p>{{ comentario.texto }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+            Sí, eliminar comentario
+        </button>
+        <a href="{% url 'comentar_cita' comentario.cita.id %}"
+           class="btn btn-secondary ms-2">
+            Cancelar
+        </a>
+    </form>
+</div>
+{% endblock %}
