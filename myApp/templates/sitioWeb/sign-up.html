@@ -174,65 +174,118 @@
 
 				<!-- Right -->
 				<div class="col-12 col-lg-6 m-auto bg-easydate">
-	<div class="row my-5">
-		<div class="col-sm-10 col-xl-8 m-auto">
+				<div class="row my-5">
+					<div class="col-sm-10 col-xl-8 m-auto">
 
-			<img src="assets/images/element/03.svg" class="h-40px mb-2" alt="">
-			<h2>Registra una cuenta!</h2>
-			<p class="lead mb-4">Qué gusto verte. Crea una cuenta ahora.</p>
+						<img src="{% static 'assets/images/element/03.svg' %}" class="h-40px mb-2" alt="">
+						<h2>Registra una cuenta!</h2>
+						<p class="lead mb-4">Qué gusto verte. Crea una cuenta ahora.</p>
 
-			<form method="post" novalidate>
-				{% csrf_token %}
+						<form method="post" novalidate>
+							{% csrf_token %}
 
-				<!-- Email -->
-				<div class="mb-4">
-					<label for="id_email" class="form-label">Cédula *</label>
-					<div class="input-group input-group-lg">
-						<span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
-						{{ form.email|add_class:"form-control" }}
+							{% if form.errors %}
+								<div class="alert alert-danger">
+									Por favor corrige los errores del formulario.
+								</div>
+							{% endif %}
+
+							<!-- Cédula -->
+							<div class="mb-4">
+								<label for="id_cedula" class="form-label">Cédula *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
+									{{ form.cedula|add_class:"form-control" }}
+								</div>
+								{% for error in form.cedula.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Nombres -->
+							<div class="mb-4">
+								<label for="id_first_name" class="form-label">Nombres *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+									{{ form.first_name|add_class:"form-control" }}
+								</div>
+								{% for error in form.first_name.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Apellidos -->
+							<div class="mb-4">
+								<label for="id_last_name" class="form-label">Apellidos *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="bi bi-person-lines-fill"></i></span>
+									{{ form.last_name|add_class:"form-control" }}
+								</div>
+								{% for error in form.last_name.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Código institución -->
+							<div class="mb-4">
+								<label for="id_codigo_institucion" class="form-label">Código de la institución *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="bi bi-building"></i></span>
+									{{ form.codigo_institucion|add_class:"form-control" }}
+								</div>
+								{% for error in form.codigo_institucion.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Password -->
+							<div class="mb-4">
+								<label for="id_password1" class="form-label">Contraseña *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="fas fa-lock"></i></span>
+									{{ form.password1|add_class:"form-control" }}
+								</div>
+								{% for error in form.password1.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Confirm Password -->
+							<div class="mb-4">
+								<label for="id_password2" class="form-label">Confirmar contraseña *</label>
+								<div class="input-group input-group-lg">
+									<span class="input-group-text"><i class="fas fa-lock"></i></span>
+									{{ form.password2|add_class:"form-control" }}
+								</div>
+								{% for error in form.password2.errors %}
+									<div class="text-danger small mt-1">{{ error }}</div>
+								{% endfor %}
+							</div>
+
+							<!-- Check -->
+							<div class="mb-4">
+								<div class="form-check">
+									<input type="checkbox" class="form-check-input" id="checkbox-1" required>
+									<label class="form-check-label" for="checkbox-1">
+										Al registrarte, aceptas los <a href="#">términos del servicio</a>.
+									</label>
+								</div>
+							</div>
+
+							<!-- Button -->
+							<div class="d-grid">
+								<button class="btn btn-light" type="submit">Registrarme</button>
+							</div>
+						</form>
+
+						<div class="mt-4 text-center">
+							<span>¿Ya tienes una cuenta? <a href="/usuarios/login">Inicia sesión aquí</a></span>
+						</div>
+
 					</div>
 				</div>
 
-				<!-- Password -->
-				<div class="mb-4">
-					<label for="id_password1" class="form-label">Password *</label>
-					<div class="input-group input-group-lg">
-						<span class="input-group-text"><i class="fas fa-lock"></i></span>
-						{{ form.password1|add_class:"form-control" }}
-					</div>
-				</div>
 
-				<!-- Confirm Password -->
-				<div class="mb-4">
-					<label for="id_password2" class="form-label">Confirmar contraseña *</label>
-					<div class="input-group input-group-lg">
-						<span class="input-group-text"><i class="fas fa-lock"></i></span>
-						{{ form.password2|add_class:"form-control" }}
-					</div>
-				</div>
-
-				<!-- Check -->
-				<div class="mb-4">
-					<div class="form-check">
-						<input type="checkbox" class="form-check-input" id="checkbox-1" required>
-						<label class="form-check-label" for="checkbox-1">
-							Al registrarte, aceptas los <a href="#">términos del servicio</a>.
-						</label>
-					</div>
-				</div>
-
-				<!-- Button -->
-				<div class="d-grid">
-					<button class="btn btn-light" type="submit">Registrarme</button>
-				</div>
-			</form>
-
-			<div class="mt-4 text-center">
-				<span>¿Ya tienes una cuenta? <a href="/usuarios/login">Inicia sesión aquí</a></span>
-			</div>
-
-		</div>
-	</div>
 </div>
 
 			</div>

@@ -1,39 +1,88 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, Rol
+from .models import User, Rol, Institucion
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+
 class RegistroForm(UserCreationForm):
-    # ocultamos username para que no bloquee la validación
+    # username no se muestra, se asigna desde cédula
     username = forms.CharField(required=False, widget=forms.HiddenInput())
-    email = forms.EmailField(required=True)
+
+    cedula = forms.CharField(
+        label="Cédula",
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Ingrese su cédula",
+        })
+    )
+
+    codigo_institucion = forms.CharField(
+        label="Código de la institución",
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Ej: UEDSM-01",
+        })
+    )
+
+    first_name = forms.CharField(
+        label="Nombres",
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
+    last_name = forms.CharField(
+        label="Apellidos",
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
 
     class Meta:
         model = User
-        fields = ("email", "first_name", "last_name", "password1", "password2", "username")
+        fields = (
+            "cedula",
+            "first_name",
+            "last_name",
+            "password1",
+            "password2",
+            "username",
+        )
 
-    def clean(self):
-        data = super().clean()
-        # si no viene username, lo igualamos al email
-        if not data.get("username") and data.get("email"):
-            data["username"] = data["email"]
-        return data
+    def clean_codigo_institucion(self):
+        codigo = self.cleaned_data["codigo_institucion"].strip()
+        try:
+            return Institucion.objects.get(codigo=codigo)
+        except Institucion.DoesNotExist:
+            raise forms.ValidationError("Código de institución inválido.")
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        user.username = self.cleaned_data.get("username") or self.cleaned_data["email"]
+
+        cedula = self.cleaned_data["cedula"]
+        institucion = self.cleaned_data["codigo_institucion"]
+
+        # username = cédula
+        user.username = cedula
+        user.cedula = cedula
+        user.institucion = institucion
+
+        # Rol Representante
         rol_rep, _ = Rol.objects.get_or_create(
             nombre="Representante",
             defaults={"descripcion": "Padre/madre/representante"},
         )
         user.rol = rol_rep
+
+        # Forzar cambio de contraseña en primer login
+        user.debe_cambiar_password = False  # porque ya la define él mismo aquí
+
         if commit:
             user.save()
+
         return user
-    
+
+
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(
         label="Email address",
