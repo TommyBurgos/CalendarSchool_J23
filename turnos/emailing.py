@@ -24,16 +24,21 @@ def enviar_notificacion(asunto: str, template: str, contexto: dict, destinatario
         html_message=html,
         fail_silently=False,
     )
-from user.models import User
+#from user.models import User
 
-def obtener_emails_admins() -> List[str]:
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+def obtener_emails_admins(institucion):
     """
-    Devuelve emails de usuarios con rol 'Administrador' activos.
-    Compatible con AUTH_USER_MODEL personalizado.
+    Devuelve emails de usuarios Administrador y DocenteAdministrador
+    de la institución indicada.
     """
-    User = apps.get_model(settings.AUTH_USER_MODEL)  # evita import circular
-    return list(
-        User.objects.filter(rol__nombre="Administrador", is_active=True)
-        .exclude(email="")
-        .values_list("email", flat=True)
-    )
+    qs = User.objects.filter(
+        institucion=institucion,
+        rol__nombre__in=["Administrador", "DocenteAdministrador"],
+        email__isnull=False,
+    ).exclude(email="")
+
+    return list(qs.values_list("email", flat=True))

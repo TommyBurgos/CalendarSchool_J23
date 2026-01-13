@@ -47,7 +47,7 @@ def reservar_cita(docente, representante, curso_estudiante, nombre_estudiante, m
 
     fin = inicio + timedelta(minutes=minutos_bloque)
 
-    if inicio < timezone.now() + timedelta(hours=24):
+    if inicio < timezone.now() + timedelta(hours=12):
         raise ValidationError("Debes reservar con al menos 24 horas de antelación.")
 
     if not _esta_en_disponibilidad(docente, inicio, fin):
@@ -55,17 +55,6 @@ def reservar_cita(docente, representante, curso_estudiante, nombre_estudiante, m
 
     # -------- LIMITES POR REPRESENTANTE --------
     fecha = timezone.localtime(inicio).date()
-    from .models import Cita, EstadoCita
-
-    diarias = Cita.objects.filter(
-        representante=representante,
-        institucion=inst,           # 🔥 MULTITENANT
-        inicio__date=fecha,
-        estado__in=[EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA]
-    ).count()
-
-    if diarias >= 1:
-        raise ValidationError("Máximo 1 cita por día.")
 
     semana_ini = fecha - timedelta(days=fecha.weekday())
     semana_fin = semana_ini + timedelta(days=6)
@@ -77,8 +66,8 @@ def reservar_cita(docente, representante, curso_estudiante, nombre_estudiante, m
         estado__in=[EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA]
     ).count()
 
-    if semanales >= 2:
-        raise ValidationError("Máximo 2 citas por semana.")
+    if semanales >= 5:
+        raise ValidationError("Máximo 5 citas por semana.")
 
     # -------- CREAR CITA --------
     cita = Cita(
@@ -307,7 +296,7 @@ def reservar_cita(
         destinatarios=_uniq_emails([
             cita.docente.usuario.email,
             cita.representante.email,
-            *obtener_emails_admins(),
+            *obtener_emails_admins(inst),
         ]),
     )
 
@@ -346,7 +335,7 @@ def cancelar_cita_por_representante(*, cita: Cita, usuario, motivo: str = "") ->
     destinatarios = _uniq_emails([
         cita.docente.usuario.email,
         cita.representante.email,
-        *obtener_emails_admins()  # ← admins de la institución
+        *obtener_emails_admins(inst)  # ← admins de la institución
     ])
 
     enviar_notificacion(
@@ -392,7 +381,7 @@ def cancelar_cita_por_docente(*, cita: Cita, usuario_docente, motivo: str = "") 
     destinatarios = _uniq_emails([
         cita.representante.email,
         cita.docente.usuario.email,
-        *obtener_emails_admins()
+        *obtener_emails_admins(inst)
     ])
 
     enviar_notificacion(

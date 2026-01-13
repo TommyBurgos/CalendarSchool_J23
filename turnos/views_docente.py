@@ -41,7 +41,8 @@ def disponibilidad_list(request):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
-        defaults={"minutos_por_bloque": 20, "activo": True},
+        institucion=inst,
+        defaults={"minutos_por_bloque": 10, "activo": True},
     )
     if creado:
         messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
@@ -53,6 +54,7 @@ def disponibilidad_create(request):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
@@ -79,6 +81,7 @@ def disponibilidad_delete(request, pk):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
@@ -97,6 +100,7 @@ def excepciones_list(request):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
@@ -109,6 +113,7 @@ def excepciones_create(request):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
@@ -135,6 +140,7 @@ def excepciones_delete(request, pk):
     inst = request.user.institucion
     docente, creado = PerfilDocente.objects.get_or_create(
         usuario=request.user,
+        institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
     if creado:
@@ -238,6 +244,8 @@ def cita_confirmar(request, pk):
     return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
 
 
+from django.urls import reverse
+
 @requiere_roles("Docente", "DocenteAdministrador")
 def cita_cancelar(request, pk):
     inst = request.user.institucion
@@ -247,8 +255,6 @@ def cita_cancelar(request, pk):
         institucion=inst,
         defaults={"minutos_por_bloque": 20, "activo": True},
     )
-    if creado:
-        messages.info(request, "Se creó tu perfil de docente con valores por defecto.")
 
     c = get_object_or_404(Cita, pk=pk, docente=docente, institucion=inst)
 
@@ -261,9 +267,12 @@ def cita_cancelar(request, pk):
         c.save()
 
         messages.info(request, "Cita cancelada.")
-        return redirect(request.META.get("HTTP_REFERER", "turnos:agenda_dia"))
 
-    return render(request, "turnos/docente/cita_cancelar_confirm.html", {"cita": c})
+        fecha = c.inicio.date().isoformat()
+        url = reverse("agenda_dia")
+        return redirect(f"{url}?fecha={fecha}")
+
+    return render(request, "docente/cita_cancelar_confirm.html", {"cita": c})
 
 
 @requiere_roles("Docente", "DocenteAdministrador")
