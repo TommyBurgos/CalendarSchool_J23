@@ -1,9 +1,12 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate, get_user_model
+from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import RegistroForm, LoginForm, PerfilUsuarioForm
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.contrib.auth.forms import PasswordChangeForm
+
+
 
 def registrar(request):
     print("Ingrese a la funcion registrar")
@@ -85,6 +88,11 @@ def vista_login(request):
         # Caso 0 instituciones (aún no has asignado) → dejamos pasar como antes
         if not instituciones:
             login(request, user)
+            if user.debe_cambiar_password:
+                if next_url:
+                    request.session["next_after_password_change"] = next_url
+                return redirect("cambiar_password_forzado")
+
             if next_url:
                 return redirect(next_url)
             return post_login_redirect(user)
@@ -93,6 +101,11 @@ def vista_login(request):
         if len(instituciones) == 1:
             request.session["institucion_id"] = instituciones[0].id
             login(request, user)
+            if user.debe_cambiar_password:
+                if next_url:
+                    request.session["next_after_password_change"] = next_url
+                return redirect("cambiar_password_forzado")
+
             if next_url:
                 return redirect(next_url)
             return post_login_redirect(user)
@@ -180,3 +193,71 @@ def post_login_redirect(user, fallback="dashboard"):
 
     # Sin rol o rol desconocido
     return redirect(fallback)
+
+
+@login_required
+def cambiar_password_forzado(request):
+    if not request.user.debe_cambiar_password:
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.debe_cambiar_password = False
+            user.save(update_fields=["debe_cambiar_password"])
+            update_session_auth_hash(request, user)
+            messages.success(request, "Contraseña actualizada correctamente.")
+            return redirect("dashboard")
+    else:
+        form = PasswordChangeForm(request.user)
+
+    def _get_base_template(user):
+        if user.is_superuser or (user.rol and user.rol.nombre in ["Administrador", "DocenteAdministrador"]):
+            return "base.html"
+        if user.rol and user.rol.nombre == "Docente":
+            return "docente/base.html"
+        if user.rol and user.rol.nombre == "Representante":
+            return "representante/base.html"
+        return "base.html"
+
+    base_template = _get_base_template(request.user)
+
+    return render(
+        request,
+        "user/cambiar_password_forzado.html",
+        {
+            "form": form,
+            "base_template": base_template,
+        }
+    )    
+
+@login_required
+def cambiar_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Contraseña cambiada correctamente.")
+            return redirect("mi_perfil")
+    else:
+        form = PasswordChangeForm(request.user)
+
+    def _get_base_template(user):
+        if user.is_superuser or (user.rol and user.rol.nombre in ["Administrador", "DocenteAdministrador"]):
+            return "base.html"
+        if user.rol and user.rol.nombre == "Docente":
+            return "docente/base.html"
+        if user.rol and user.rol.nombre == "Representante":
+            return "representante/base.html"
+        return "base.html"
+
+    base_template = _get_base_template(request.user)
+
+    return render(request,
+        "user/cambiar_password_forzado.html",
+        {
+            "form": form,
+            "base_template": base_template,
+        })

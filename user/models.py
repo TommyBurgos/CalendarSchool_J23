@@ -41,6 +41,7 @@ class User(AbstractUser):
     )
     email = models.EmailField(unique=True, null=True, blank=True)
     imgPerfil = models.ImageField(upload_to="users/", default="imageDefault.png")
+    debe_cambiar_password = models.BooleanField(default=True)
     rol = models.ForeignKey("user.Rol", null=True, blank=True, on_delete=models.SET_NULL, related_name="usuarios")
     telefono = models.CharField(
     max_length=20,

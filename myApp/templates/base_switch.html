@@ -1,0 +1,15 @@
+{% load static %}
+
+{% if request.user.rol.nombre == "Administrador" or request.user.is_superuser or request.user.rol.nombre == "DocenteAdministrador" %}
+    {% extends "base.html" %}
+{% elif request.user.rol.nombre == "Docente" %}
+    {% extends "docente/base.html" %}
+{% elif request.user.rol.nombre == "Representante" %}
+    {% extends "representante/base.html" %}
+{% else %}
+    {% extends "base.html" %}
+{% endif %}
+
+{% block content %}
+    {% block inner_content %}{% endblock %}
+{% endblock %}
