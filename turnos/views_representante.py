@@ -361,7 +361,7 @@ def rep_proponer_cita(request):
             nombre_estudiante=getattr(estudiante, "nombre", estudiante.__str__()),
             motivo=motivo,
             inicio=inicio,
-            institucion=inst,  # ← AGREGADO
+            #institucion=inst,  # ← Quitado
         )
 
         messages.success(request, "Horario propuesto. Pendiente de aprobación.")

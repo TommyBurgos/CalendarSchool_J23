@@ -399,12 +399,17 @@ def cancelar_cita_por_docente(*, cita: Cita, usuario_docente, motivo: str = "") 
 
     return cita
 
+
 def proponer_cita(*, docente, representante, curso_estudiante, nombre_estudiante, motivo, inicio):
     inst = representante.institucion
 
+    # ✅ Defensa multitenant (modo producción)
+    if getattr(docente, "institucion_id", None) != getattr(inst, "id", None):
+        raise ValidationError("No tienes permisos para proponer citas en esta institución.")
+
     # Evitar solapamientos dentro de la misma institución
     if Cita.objects.filter(docente=docente, institucion=inst, inicio=inicio).exists():
-        raise Exception("El docente ya tiene una cita en ese horario.")
+        raise ValidationError("El docente ya tiene una cita en ese horario.")
 
     minutos = docente.minutos_por_bloque or 20
     fin = inicio + timedelta(minutes=minutos)
