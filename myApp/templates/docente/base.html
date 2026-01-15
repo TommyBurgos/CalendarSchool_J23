@@ -52,10 +52,10 @@
               <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name in 'disp_list disp_create' %}active{% endif %}"
                  href="{% url 'disp_list' %}">Disponibilidad</a>
             </li>
-            <li class="nav-item">
+            <!--<li class="nav-item">
               <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name in 'exc_list exc_create' %}active{% endif %}"
                  href="{% url 'exc_list' %}">Excepciones</a>
-            </li>
+            </li>-->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle 
                 {% if request.resolver_match and request.resolver_match.url_name in 'agenda_dia agenda_semana calendario_mes' %}active{% endif %}"

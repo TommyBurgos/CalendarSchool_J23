@@ -47,7 +47,7 @@
           <label class="form-label">Estudiante</label>
           <select name="estudiante_rel" class="form-select" required>
             <option value="">Seleccione…</option>
-            {% for rel in relaciones %}
+            {% for rel in estudiantes %}
               <option value="{{ rel.id }}">
                 {{ rel.estudiante.nombre }} ({{ rel.estudiante.curso }})
               </option>

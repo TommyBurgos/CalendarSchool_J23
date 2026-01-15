@@ -449,6 +449,16 @@ def rep_slots_dia(request):
     starts = generar_slots(docente, fecha)
     slots = [(s, s + timezone.timedelta(minutes=minuto)) for s in starts]
 
+    # ✅ RELACIONES del representante (NO estudiantes directos)
+    relaciones = RelacionRepresentacion.objects.filter(
+        representante=request.user,
+        institucion=inst,
+        activo=True,
+        verificado=True,   # 👈 MUY IMPORTANTE
+    ).select_related("estudiante")
+    print(f"representante> {request.user}")
+    print(f"representante> {inst}")
+    print(f"RELACIONES: {relaciones}")
     return render(
         request,
         "representante/slots_dia.html",
@@ -456,5 +466,6 @@ def rep_slots_dia(request):
             "docente": docente,
             "fecha": fecha,
             "slots": slots,
+            "estudiantes": relaciones,  # 👈 el template espera RELACIONES
         },
     )

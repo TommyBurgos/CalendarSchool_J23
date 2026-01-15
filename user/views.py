@@ -197,8 +197,9 @@ def post_login_redirect(user, fallback="dashboard"):
 
 @login_required
 def cambiar_password_forzado(request):
+    user=request.user
     if not request.user.debe_cambiar_password:
-        return redirect("dashboard")
+        return post_login_redirect(user)
 
     if request.method == "POST":
         form = PasswordChangeForm(request.user, request.POST)
@@ -208,7 +209,7 @@ def cambiar_password_forzado(request):
             user.save(update_fields=["debe_cambiar_password"])
             update_session_auth_hash(request, user)
             messages.success(request, "Contraseña actualizada correctamente.")
-            return redirect("dashboard")
+            return post_login_redirect(user)
     else:
         form = PasswordChangeForm(request.user)
 
