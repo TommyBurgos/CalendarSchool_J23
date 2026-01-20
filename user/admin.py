@@ -73,6 +73,10 @@ class UserAdmin(BaseUserAdmin):
                 "first_name",
                 "last_name",
             )
+        }),("Control de sesión", {
+            "fields": (
+                "debe_cambiar_password",  # ✅ EDITABLE AQUÍ
+            )
         }),
         ("Rol y estado", {
             "fields": (
